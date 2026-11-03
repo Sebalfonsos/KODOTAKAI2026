@@ -1,0 +1,30 @@
+/* Sistema visual: docs/frontend/ESTRUCTURA_FRONT.md §6. Contrastes calculados allí. */
+:root {
+  --navy-950: #081b2f;
+  --navy-800: #123b57;
+  --teal-500: #18c7c2;
+  --teal-700: #0e7c7b;
+  --amber-400: #ffbd59;
+  --fondo: #f5f8fc;
+  --tarjeta: #ffffff;
+  --tinta: #11243d;
+  --muted: #60748a;
+  --primario: #2563eb;
+  --exito: #047857;
+  --error: #b91c1c;
+  --advertencia: #b45309;
+  --asesor: #6d28d9;
+  --info: #1d4ed8;
+  --texto-oscuro: #f5f8fc;
+  --texto-oscuro-2: #b7c6d4;
+  --borde: #11243d1f;
+  --foco: #1d4ed8;
+  --ease-out: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --ease-spring: cubic-bezier(0.22, 1.35, 0.36, 1);
+  --ease-soft: cubic-bezier(0.45, 0, 0.55, 1);
+  --radio-s: 12px;
+  --radio-m: 16px;
+  --radio-l: 20px;
+  --fuente: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+}

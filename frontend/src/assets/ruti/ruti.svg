@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="1122" height="1402" viewBox="0 0 1122 1402" role="img"
+  aria-labelledby="titulo descripcion" data-state="escuchando" id="ruti">
+<title id="titulo">RUTI, mascota asistente de logística</title>
+<desc id="descripcion">Mascota amigable vectorial con un pin de ubicación, visor expresivo, manos y cuerpo de paquete. Sus componentes están separados en capas para animación.</desc>
+<defs>
+ <linearGradient id="teal" x1="0.08" y1="0.06" x2="0.9" y2="1"><stop stop-color="#75f5e9"/><stop offset="0.32" stop-color="#22cbbf"/><stop offset="0.71" stop-color="#07a39e"/><stop offset="1" stop-color="#006c80"/></linearGradient>
+ <linearGradient id="tealOscuro" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#23c9c3"/><stop offset=".55" stop-color="#03969d"/><stop offset="1" stop-color="#07546e"/></linearGradient>
+ <linearGradient id="blanco" x1="0.1" y1="0" x2="0.85" y2="1"><stop stop-color="#ffffff"/><stop offset=".45" stop-color="#e0faff"/><stop offset=".81" stop-color="#aadadd"/><stop offset="1" stop-color="#73b8c5"/></linearGradient>
+ <linearGradient id="azulOscuro" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1b4761"/><stop offset=".5" stop-color="#102c4a"/><stop offset="1" stop-color="#091929"/></linearGradient>
+ <linearGradient id="visorGradient" x1="0.1" y1="0" x2="0.9" y2="1"><stop stop-color="#10354e"/><stop offset=".5" stop-color="#061c34"/><stop offset="1" stop-color="#10253e"/></linearGradient>
+ <linearGradient id="oro" x1="0.08" y1="0" x2="0.9" y2="1"><stop stop-color="#ffeb9a"/><stop offset=".28" stop-color="#ffca44"/><stop offset=".66" stop-color="#ffad12"/><stop offset="1" stop-color="#e77e0d"/></linearGradient>
+ <linearGradient id="oroFranja" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#fff1ae"/><stop offset=".35" stop-color="#ffd16d"/><stop offset=".85" stop-color="#efa32e"/><stop offset="1" stop-color="#df8419"/></linearGradient>
+ <linearGradient id="ojosBlanco" x1="0.12" y1="0" x2="0.88" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#e9faff"/></linearGradient>
+ <linearGradient id="iris" x1="0" y1="0" x2="0.3" y2="1"><stop stop-color="#0b2137"/><stop offset=".56" stop-color="#06394d"/><stop offset="1" stop-color="#08ddce"/></linearGradient>
+ <radialGradient id="rubor"><stop stop-color="#f4b85c" stop-opacity=".31"/><stop offset="1" stop-color="#f4b85c" stop-opacity="0"/></radialGradient>
+ <filter id="sombraSutil" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<style><![CDATA[
+/* Cambia el atributo data-state del SVG raíz para ver estados. */
+#ojos_cerrados, #boca_pensando, #boca_resuelto, #boca_preocupada,
+#indicador_pensando, #indicador_resuelto, #indicador_escalamiento,
+#indicador_error { display:none; }
+svg[data-state="pensando"] #boca_normal,
+svg[data-state="resuelto"] #boca_normal,
+svg[data-state="escalamiento"] #boca_normal,
+svg[data-state="error"] #boca_normal { display:none; }
+svg[data-state="pensando"] #boca_pensando { display:inline; }
+svg[data-state="resuelto"] #boca_resuelto { display:inline; }
+svg[data-state="escalamiento"] #boca_preocupada,
+svg[data-state="error"] #boca_preocupada { display:inline; }
+svg[data-state="resuelto"] #ojos_abiertos { display:none; }
+svg[data-state="resuelto"] #ojos_cerrados { display:inline; }
+svg:not([data-state="escuchando"]) #indicador_escuchando { display:none; }
+svg[data-state="pensando"] #indicador_pensando { display:inline; }
+svg[data-state="resuelto"] #indicador_resuelto { display:inline; }
+svg[data-state="escalamiento"] #indicador_escalamiento { display:inline; }
+svg[data-state="error"] #indicador_error { display:inline; }
+svg[data-state="pensando"] #pupila_izquierda,
+svg[data-state="pensando"] #pupila_derecha { transform:translate(0px,-10px); }
+svg[data-state="error"] #ceja_izquierda { transform:rotate(13deg); transform-origin:412px 432px; }
+svg[data-state="error"] #ceja_derecha { transform:rotate(-13deg); transform-origin:671px 432px; }
+]]></style>
+
+<!-- Capa raíz. Cada id es una pieza direccionable por CSS/GSAP/JavaScript. -->
+<g id="flotacion">
+ <!-- 01: piernas y pies, al fondo de la figura -->
+ <g id="piernas">
+  <g id="pierna_izquierda">
+   <path d="M381 1013 L495 1020 L462 1213 Q423 1231 355 1207 L374 1082Z" fill="url(#azulOscuro)" stroke="#0b324b" stroke-width="12" stroke-linejoin="round"/>
+   <path d="M396 1079 L475 1084 L447 1191 Q416 1197 384 1190Z" fill="#36516b" opacity=".45"/>
+  </g>
+  <g id="pierna_derecha">
+   <path d="M604 1020 L714 1016 L760 1202 Q702 1230 653 1212 L619 1083Z" fill="url(#azulOscuro)" stroke="#0b324b" stroke-width="12" stroke-linejoin="round"/>
+   <path d="M630 1085 L705 1081 L731 1191 Q698 1201 666 1190Z" fill="#36516b" opacity=".43"/>
+  </g>
+  <g id="pie_izquierdo">
+   <path d="M358 1151 Q393 1131 458 1154 Q478 1176 469 1215 Q490 1235 491 1314 Q500 1369 456 1382 L248 1383 Q217 1383 226 1340 Q238 1266 302 1226 Q318 1183 358 1151Z" fill="url(#tealOscuro)" stroke="#11394f" stroke-width="12" stroke-linejoin="round"/>
+   <path d="M352 1157 Q385 1143 455 1162 Q469 1189 453 1223 Q443 1233 428 1217 Q377 1184 329 1219 Q320 1183 352 1157Z" fill="url(#blanco)" stroke="#0d5367" stroke-width="7"/>
+   <path d="M275 1315 Q310 1256 381 1258 Q428 1262 447 1305 Q467 1328 479 1313 L477 1344 Q466 1361 444 1364 L242 1364 Q230 1340 275 1315Z" fill="url(#blanco)"/>
+   <path d="M247 1364 L474 1363 Q481 1377 458 1384 L244 1384 Q223 1379 247 1364Z" fill="url(#azulOscuro)"/>
+   <path d="M326 1236 Q361 1224 395 1240" stroke="#ffc340" stroke-width="17" fill="none" stroke-linecap="round"/>
+  </g>
+  <g id="pie_derecho">
+   <path d="M652 1154 Q704 1132 756 1158 Q788 1189 797 1227 Q870 1271 846 1352 Q841 1386 814 1388 L610 1385 Q583 1382 589 1344 L602 1231 Q614 1179 652 1154Z" fill="url(#tealOscuro)" stroke="#11394f" stroke-width="12" stroke-linejoin="round"/>
+   <path d="M657 1160 Q706 1143 752 1167 Q779 1191 778 1217 Q742 1193 701 1204 Q672 1209 638 1232 Q616 1212 626 1183Z" fill="url(#blanco)" stroke="#0d5367" stroke-width="7"/>
+   <path d="M606 1319 Q640 1293 672 1272 Q703 1260 752 1277 Q797 1285 819 1325 Q837 1335 839 1352 Q812 1367 771 1367 L605 1365 Q590 1342 606 1319Z" fill="url(#blanco)"/>
+   <path d="M605 1362 Q732 1370 837 1357 Q841 1384 813 1388 L612 1385 Q588 1380 605 1362Z" fill="url(#azulOscuro)"/>
+   <path d="M674 1239 Q705 1227 739 1241" stroke="#ffc340" stroke-width="17" fill="none" stroke-linecap="round"/>
+  </g>
+ </g>
+
+ <!-- 02: los brazos giran desde sus propios hombros -->
+ <g id="brazos">
+  <g id="brazo_izquierdo">
+   <path d="M358 786 Q321 801 257 801 L189 772 Q159 776 165 816 Q174 857 245 861 Q311 857 365 841Z" fill="url(#azulOscuro)" stroke="#0c3349" stroke-width="11" stroke-linejoin="round"/>
+   <path d="M221 797 Q229 828 226 855" fill="none" stroke="#447387" stroke-width="6" opacity=".5"/>
+  </g>
+  <g id="brazo_derecho">
+   <path d="M763 783 Q804 799 864 805 L938 777 Q971 781 956 829 Q936 864 862 860 Q801 854 747 837Z" fill="url(#azulOscuro)" stroke="#0c3349" stroke-width="11" stroke-linejoin="round"/>
+   <path d="M900 804 Q892 833 896 853" fill="none" stroke="#447387" stroke-width="6" opacity=".5"/>
+  </g>
+ </g>
+
+ <!-- 03: torso en forma de paquete -->
+ <g id="cuerpo">
+  <path d="M363 739 Q405 724 456 726 L668 726 Q726 727 757 754 Q805 791 805 859 L805 963 Q802 1050 743 1076 Q696 1091 630 1089 L429 1087 Q334 1085 311 1030 Q288 991 293 908 L296 855 Q297 778 363 739Z"
+   fill="url(#teal)" stroke="#0a576a" stroke-width="15" stroke-linejoin="round"/>
+  <path d="M332 781 Q379 749 418 753 L710 754 Q757 769 774 811 L773 829 L332 829Z" fill="#8af7e9" opacity=".39"/>
+  <path d="M339 845 Q339 775 382 758 Q348 798 350 903 L350 976 Q345 1024 387 1061 Q308 1045 315 951 L315 867Z" fill="#007b85" opacity=".36"/>
+  <path d="M767 824 Q792 849 790 933 Q789 1024 747 1052 L702 1071 Q749 1035 754 971Z" fill="#076b73" opacity=".48"/>
+  <path d="M377 1046 Q490 1072 673 1056 Q704 1053 739 1035" fill="none" stroke="#63e7db" stroke-width="12" opacity=".33" stroke-linecap="round"/>
+  <g id="franjas_ruta">
+   <path d="M530 1017 L760 890 L760 925 L572 1043 Q544 1049 530 1046Z" fill="#c8ffff" opacity=".91"/>
+   <path d="M594 1056 L771 952 L768 980 L649 1060Z" fill="#d2ffff" opacity=".78"/>
+  </g>
+  <g id="insignia_paquete">
+   <path d="M499 752 L622 752 L636 805 L635 903 Q635 915 624 910 L548 882 L478 911 Q466 916 465 901 L466 807Z" fill="url(#oroFranja)" stroke="#155468" stroke-width="10" stroke-linejoin="round"/>
+   <path d="M474 808 L626 808" stroke="#ffecae" stroke-width="11" opacity=".62"/>
+   <path d="M481 777 L617 777" stroke="#fff3b9" stroke-width="9" opacity=".42"/>
+  </g>
+ </g>
+
+ <!-- 04: guantes separados del cuerpo, animables individualmente -->
+ <g id="manos">
+  <g id="mano_izquierda">
+   <path d="M182 768 Q216 761 243 783 Q272 811 254 862 Q240 890 213 901 Q174 916 141 888" fill="url(#blanco)" stroke="#10475c" stroke-width="9"/>
+   <path d="M200 768 Q231 789 232 828 Q232 863 211 890" fill="none" stroke="#078f98" stroke-width="16"/>
+   <path d="M203 855 L240 852" stroke="#ffb62e" stroke-width="17" stroke-linecap="round"/>
+   <path d="M114 774 Q104 762 98 740 Q89 706 111 696 Q138 689 149 713 Q156 742 179 761 Q207 776 214 807 Q219 840 193 862 Q168 888 127 892 L91 910 Q61 921 51 901 Q43 881 76 865 L37 878 Q10 885 7 861 Q5 839 33 833 L72 821 L35 816 Q14 810 19 788 Q24 762 52 765 L112 768Z"
+    fill="url(#blanco)" stroke="#0b4258" stroke-width="10" stroke-linejoin="round"/>
+   <path d="M117 777 Q107 828 142 862" fill="none" stroke="#75b7c4" stroke-width="7" stroke-linecap="round"/>
+   <path d="M68 822 Q102 822 120 817" fill="none" stroke="#92c9d3" stroke-width="5" stroke-linecap="round"/>
+   <path d="M72 866 Q110 857 128 839" fill="none" stroke="#92c9d3" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g id="mano_derecha">
+   <path d="M938 765 Q909 764 888 788 Q861 816 874 855 Q894 898 932 909 L977 891" fill="url(#blanco)" stroke="#10475c" stroke-width="9"/>
+   <path d="M906 772 Q887 795 888 826 Q890 866 911 890" fill="none" stroke="#078f98" stroke-width="16"/>
+   <path d="M893 857 L874 852" stroke="#ffb62e" stroke-width="17" stroke-linecap="round"/>
+   <path d="M1006 772 Q1018 757 1022 727 Q1029 699 1005 694 Q978 692 971 723 Q961 744 944 760 Q918 775 913 813 Q912 843 937 867 Q962 890 1004 895 L1045 911 Q1070 918 1080 901 Q1085 879 1051 865 L1086 873 Q1115 878 1116 850 Q1116 833 1089 823 L1049 811 L1090 813 Q1110 808 1107 786 Q1104 763 1078 764 L1006 772Z"
+    fill="url(#blanco)" stroke="#0b4258" stroke-width="10" stroke-linejoin="round"/>
+   <path d="M1008 776 Q1015 836 975 865" fill="none" stroke="#75b7c4" stroke-width="7" stroke-linecap="round"/>
+   <path d="M1042 816 Q1016 821 999 816" fill="none" stroke="#92c9d3" stroke-width="5" stroke-linecap="round"/>
+   <path d="M1046 865 Q1010 860 989 843" fill="none" stroke="#92c9d3" stroke-width="5" stroke-linecap="round"/>
+  </g>
+ </g>
+
+ <!-- 05: pin, su propia capa para girar / flotar / vibrar -->
+ <g id="pin_ubicacion">
+  <path d="M548 204 L569 206 L567 292 Q550 311 530 291Z" fill="url(#azulOscuro)" stroke="#0b4158" stroke-width="9"/>
+  <path d="M550 12 C486 11 452 54 452 108 C452 161 494 208 549 250 Q564 258 580 240 C626 195 656 154 656 109 C657 51 614 10 550 12Z"
+   fill="url(#oro)" stroke="#814308" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M552 31 Q609 30 630 82" fill="none" stroke="#fff3ac" stroke-width="12" stroke-linecap="round" opacity=".72"/>
+  <circle cx="552" cy="104" r="52" fill="#7b430d" stroke="#ffe387" stroke-width="9"/>
+  <circle cx="552" cy="104" r="36" fill="#071d30" stroke="#cc7e14" stroke-width="7"/>
+  <circle cx="552" cy="104" r="19" fill="#24e1d4" opacity=".3"/>
+ </g>
+
+ <!-- 06: cabeza y cascos -->
+ <g id="cabeza">
+  <g id="auricular_izquierdo">
+   <path d="M238 458 Q188 448 160 482 Q122 534 151 622 Q161 664 198 682 Q226 688 251 665 L274 610 L258 505Z" fill="url(#tealOscuro)" stroke="#0d6170" stroke-width="12"/>
+   <path d="M200 467 Q173 519 177 597 Q181 644 195 672" stroke="#ffdc73" stroke-width="19" fill="none" stroke-linecap="round"/>
+   <path d="M233 485 Q225 576 243 646" stroke="#49f0e3" stroke-width="7" opacity=".5" fill="none"/>
+  </g>
+  <g id="auricular_derecho">
+   <path d="M850 459 Q896 446 921 481 Q957 523 941 619 Q934 668 893 687 Q864 688 845 663 L823 603 L831 504Z" fill="url(#tealOscuro)" stroke="#0d6170" stroke-width="12"/>
+   <path d="M887 467 Q920 520 913 597 Q910 640 894 672" stroke="#ffdc73" stroke-width="19" fill="none" stroke-linecap="round"/>
+   <path d="M849 488 Q858 579 849 649" stroke="#49f0e3" stroke-width="7" opacity=".5" fill="none"/>
+  </g>
+  <g id="casco">
+   <path d="M276 424 Q317 308 424 278 Q486 253 546 250 L647 251 Q773 265 838 386 Q878 466 879 568 L875 643 Q869 717 795 742 Q736 766 635 766 L437 766 Q314 766 263 733 Q216 702 217 619 L220 510 Q228 458 276 424Z" fill="url(#blanco)" stroke="#087887" stroke-width="13" stroke-linejoin="round"/>
+   <path d="M337 310 Q435 254 515 252 L647 253 Q699 252 745 301 L727 321 Q690 337 643 340 L467 340 Q430 332 414 300Z" fill="url(#tealOscuro)"/>
+   <path d="M300 371 Q335 320 360 322" fill="none" stroke="#ffb91c" stroke-width="19" stroke-linecap="round"/>
+   <path d="M749 329 Q781 341 804 374" fill="none" stroke="#ffb91c" stroke-width="19" stroke-linecap="round"/>
+   <path d="M285 400 Q355 336 442 335 Q572 321 688 334 Q780 342 842 413" fill="none" stroke="#f9ffff" stroke-width="25" stroke-linecap="round" opacity=".76"/>
+   <path d="M267 685 Q310 736 424 740 L681 740 Q776 740 842 688" fill="none" stroke="#6fd8dc" stroke-width="17" opacity=".52" stroke-linecap="round"/>
+   <ellipse cx="551" cy="275" rx="58" ry="19" fill="#2eeadd"/>
+   <ellipse cx="551" cy="274" rx="39" ry="10" fill="#0d7486"/>
+  </g>
+  <g id="visor">
+   <path d="M355 389 Q450 369 543 369 Q711 362 778 394 Q832 422 837 491 L834 600 Q825 691 756 704 Q683 723 570 722 L386 714 Q288 711 278 635 L273 490 Q285 424 355 389Z" fill="url(#visorGradient)" stroke="#315e71" stroke-width="11"/>
+   <path d="M321 449 Q348 389 461 385 L652 383 Q773 387 806 433 Q814 471 801 517 Q736 555 553 564 Q366 559 310 531 Q291 502 321 449Z" fill="#155078" opacity=".18"/>
+   <path d="M310 443 Q336 405 389 401" fill="none" stroke="#9bd9f6" stroke-width="9" opacity=".22" stroke-linecap="round"/>
+  </g>
+  <g id="rostro">
+   <g id="cejas">
+    <g id="ceja_izquierda"><path d="M377 453 Q412 407 450 435" fill="none" stroke="#36f5ea" stroke-width="18" stroke-linecap="round"/></g>
+    <g id="ceja_derecha"><path d="M648 435 Q681 409 719 454" fill="none" stroke="#36f5ea" stroke-width="18" stroke-linecap="round"/></g>
+   </g>
+   <g id="ojos">
+    <g id="ojos_abiertos">
+     <g id="ojo_izquierdo">
+      <ellipse cx="414" cy="557" rx="68" ry="81" fill="url(#ojosBlanco)"/>
+      <g id="pupila_izquierda"><ellipse cx="432" cy="556" rx="45" ry="65" fill="url(#iris)"/><ellipse cx="451" cy="522" rx="16" ry="21" fill="white"/><circle cx="440" cy="570" r="6" fill="#b9ffff" opacity=".7"/></g>
+     </g>
+     <g id="ojo_derecho">
+      <ellipse cx="685" cy="557" rx="68" ry="81" fill="url(#ojosBlanco)"/>
+      <g id="pupila_derecha"><ellipse cx="666" cy="556" rx="45" ry="65" fill="url(#iris)"/><ellipse cx="683" cy="522" rx="16" ry="21" fill="white"/><circle cx="676" cy="572" r="6" fill="#b9ffff" opacity=".7"/></g>
+     </g>
+    </g>
+    <g id="ojos_cerrados">
+     <path d="M353 552 Q413 500 472 553" fill="none" stroke="#f0ffff" stroke-width="17" stroke-linecap="round"/>
+     <path d="M631 553 Q687 499 742 554" fill="none" stroke="#f0ffff" stroke-width="17" stroke-linecap="round"/>
+    </g>
+   </g>
+   <g id="mejillas"><ellipse cx="330" cy="612" rx="52" ry="27" fill="url(#rubor)"/><ellipse cx="766" cy="612" rx="52" ry="27" fill="url(#rubor)"/></g>
+   <g id="boca">
+    <g id="boca_normal"><path d="M497 625 Q555 692 608 625 Q598 615 583 626 Q558 633 534 624 Q513 614 497 625Z" fill="#7dfff1" stroke="#38e5df" stroke-width="4"/></g>
+    <g id="boca_pensando"><ellipse cx="555" cy="650" rx="16" ry="22" fill="#6cf7ed"/></g>
+    <g id="boca_resuelto"><path d="M482 624 Q552 719 631 624" fill="none" stroke="#73fff2" stroke-width="17" stroke-linecap="round"/><path d="M519 654 Q560 671 597 652" fill="none" stroke="#c8fff7" stroke-width="6" opacity=".8"/></g>
+    <g id="boca_preocupada"><path d="M507 662 Q554 628 604 662" fill="none" stroke="#74f7ed" stroke-width="14" stroke-linecap="round"/></g>
+   </g>
+  </g>
+ </g>
+
+ <!-- 07: indicadores auxiliares propios de cada estado -->
+ <g id="indicadores_estado">
+  <g id="indicador_escuchando">
+   <g id="barras_audio" stroke="#51f1e6" stroke-width="9" stroke-linecap="round" fill="none">
+    <path d="M935 410 L935 456"/><path d="M955 393 L955 471"/><path d="M975 419 L975 447"/>
+   </g>
+  </g>
+  <g id="indicador_pensando">
+   <g id="puntos_ambar" fill="#ffc34f"><circle cx="938" cy="411" r="12"/><circle cx="970" cy="395" r="12"/><circle cx="1003" cy="411" r="12"/></g>
+  </g>
+  <g id="indicador_resuelto">
+   <g id="check_ambar"><circle cx="978" cy="420" r="47" fill="url(#oro)" stroke="#915d18" stroke-width="6"/><path d="M956 418 L974 439 L1004 399" fill="none" stroke="#123747" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+  <g id="indicador_escalamiento">
+   <g id="derivacion_humana"><circle cx="976" cy="420" r="48" fill="#ffcf6d" stroke="#ab6b18" stroke-width="7"/><circle cx="959" cy="405" r="9" fill="#123747"/><path d="M947 437 Q957 415 973 432" fill="none" stroke="#123747" stroke-width="9" stroke-linecap="round"/><path d="M974 421 L997 421 L997 410 M997 421 L987 431" fill="none" stroke="#123747" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+  <g id="indicador_error">
+   <g id="sin_conexion"><circle cx="976" cy="420" r="48" fill="#faad51" stroke="#b96828" stroke-width="7"/><path d="M975 387 L975 430" stroke="#143546" stroke-width="13" stroke-linecap="round"/><circle cx="975" cy="449" r="8" fill="#143546"/></g>
+  </g>
+ </g>
+</g>
+</svg>

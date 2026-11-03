@@ -1,0 +1,57 @@
+/* Animación de RUTI (docs/frontend/ESTRUCTURA_FRONT.md §5). Solo transform y opacity. */
+.ruti { line-height: 0; }
+.ruti svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ruti svg * { transform-box: view-box; }
+/* `overflow: visible` deja ver todo el cuerpo fuera del viewBox: el encuadre de cabeza debe recortar. */
+.ruti[data-encuadre="cabeza"] svg { overflow: hidden; }
+.ruti[data-encuadre="cabeza"] :is(#piernas, #brazos, #cuerpo, #manos) { display: none; }
+
+/* Sobre fondo claro, los indicadores del kit pierden visibilidad. */
+[data-tema="claro"] .ruti #barras_audio * { fill: var(--teal-700); stroke: var(--teal-700); }
+[data-tema="claro"] .ruti #puntos_ambar * { fill: var(--advertencia); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-movimiento="reducido"]) .ruti #flotacion { animation: ruti-flota 3.2s var(--ease-soft) infinite alternate; }
+  html:not([data-movimiento="reducido"]) .ruti #pin_ubicacion { transform-origin: 552px 250px; animation: ruti-pin 4s var(--ease-soft) infinite alternate; }
+  html:not([data-movimiento="reducido"]) .ruti #ojos_abiertos { transform-box: fill-box; transform-origin: center; animation: ruti-parpadeo 5s linear infinite; }
+
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] #barras_audio > * { transform-box: fill-box; transform-origin: center; animation: ruti-barra .7s var(--ease-soft) infinite alternate; }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] #barras_audio > :nth-child(2) { animation-delay: .12s; }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] #barras_audio > :nth-child(3) { animation-delay: .24s; }
+
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] #puntos_ambar > * { animation: ruti-punto 1.1s var(--ease-soft) infinite; }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] #puntos_ambar > :nth-child(2) { animation-delay: .18s; }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] #puntos_ambar > :nth-child(3) { animation-delay: .36s; }
+
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="resuelto"] #check_ambar { transform-box: fill-box; transform-origin: center; animation: ruti-check .42s var(--ease-spring); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escalamiento"] #derivacion_humana { transform-box: fill-box; transform-origin: center; animation: ruti-entra .4s var(--ease-out); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="error"] #sin_conexion { animation: ruti-aviso 1.8s var(--ease-soft) infinite alternate; }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="error"] #flotacion { animation-duration: 5s; }
+
+  /* Cabeza y pin son grupos hermanos: comparten pivote (cuello) para no despegarse. */
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] :is(#cabeza) { transform-origin: 552px 766px; transform: rotate(2deg); transition: transform .24s var(--ease-out); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] :is(#cabeza) { transform-origin: 552px 766px; transform: rotate(3deg); transition: transform .24s var(--ease-out); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escalamiento"] :is(#cabeza) { transform-origin: 552px 766px; transform: rotate(4deg); transition: transform .24s var(--ease-out); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] #pin_ubicacion,
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] #pin_ubicacion,
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escalamiento"] #pin_ubicacion { animation: none; transform-origin: 552px 766px; transition: transform .24s var(--ease-out); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escuchando"] #pin_ubicacion { transform: rotate(2deg); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="pensando"] #pin_ubicacion { transform: rotate(3deg); }
+  html:not([data-movimiento="reducido"]) .ruti svg[data-state="escalamiento"] #pin_ubicacion { transform: rotate(4deg); }
+}
+
+/* Cejas de escalamiento: distintas a las fruncidas de `error`. */
+.ruti svg[data-state="escalamiento"] #ceja_izquierda { transform-origin: 412px 432px; transform: rotate(-6deg); }
+.ruti svg[data-state="escalamiento"] #ceja_derecha { transform-origin: 671px 432px; transform: rotate(6deg); }
+
+@keyframes ruti-flota { to { transform: translateY(-8px); } }
+@keyframes ruti-pin { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+@keyframes ruti-parpadeo { 0%, 96%, 100% { transform: scaleY(1); } 98% { transform: scaleY(.08); } }
+@keyframes ruti-barra { from { transform: scaleY(.5); } to { transform: scaleY(1.25); } }
+@keyframes ruti-punto { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes ruti-check { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@keyframes ruti-entra { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes ruti-aviso { from { opacity: .6; } to { opacity: 1; } }
+
+.ruti-status { color: var(--muted); font-size: .875rem; }
+[data-tema="oscuro"] .ruti-status { color: var(--texto-oscuro-2); }
