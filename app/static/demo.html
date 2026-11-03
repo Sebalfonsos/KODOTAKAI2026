@@ -1,0 +1,366 @@
+<!doctype html>
+<!--
+  Cliente de referencia mínimo de TransLogix. NO es el frontend final (lo construye otro grupo).
+  Sirve para probar el protocolo: sesión, mensajes por SSE (fetch + ReadableStream), artifacts y artifact_submit.
+  Un solo archivo, sin dependencias ni CDN. Rutas relativas a /api/v1. Contrato: docs/frontend.md y /docs.
+-->
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TransLogix demo</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --tx:#1b1f24; --mut:#5b6573; --pri:#0b5cad; --ok:#1d7a3a; --warn:#9a6400; --bad:#b3261e; --bd:#d9dee5; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171b; --card:#1d2127; --tx:#e8eaed; --mut:#a0a8b3; --pri:#6aa9ff; --ok:#5cc27a; --warn:#e0b04a; --bad:#ff7b72; --bd:#323842; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--tx); }
+  header { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; padding:.75rem 1rem; border-bottom:1px solid var(--bd); background:var(--card); }
+  header h1 { font-size:1.1rem; margin:0 auto 0 0; }
+  main { max-width:820px; margin:0 auto; padding:1rem; }
+  #chat { display:flex; flex-direction:column; gap:.75rem; padding-bottom:6rem; }
+  .yo { align-self:flex-end; background:var(--pri); color:#fff; padding:.5rem .8rem; border-radius:12px; max-width:85%; }
+  .turno { background:var(--card); border:1px solid var(--bd); border-radius:12px; padding:.75rem; display:flex; flex-direction:column; gap:.6rem; }
+  .meta { font-size:.8rem; color:var(--mut); }
+  section.art { border:1px solid var(--bd); border-radius:10px; padding:.6rem .8rem; }
+  section.art h2 { font-size:1rem; margin:.1rem 0 .5rem; }
+  form.f { display:grid; gap:.5rem; }
+  label { display:grid; gap:.2rem; font-size:.9rem; }
+  input, select, textarea, button { font:inherit; padding:.45rem .55rem; border-radius:8px; border:1px solid var(--bd); background:var(--bg); color:var(--tx); }
+  button { cursor:pointer; background:var(--pri); color:#fff; border-color:transparent; }
+  button.secundario, button.enlace { background:transparent; color:var(--pri); border-color:var(--pri); }
+  button.peligro { background:var(--bad); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid var(--pri); outline-offset:2px; }
+  .err { color:var(--bad); font-size:.85rem; }
+  .chips { display:flex; flex-wrap:wrap; gap:.4rem; }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; }
+  th, td { border-bottom:1px solid var(--bd); padding:.3rem .4rem; text-align:left; }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .badge { display:inline-block; padding:.1rem .5rem; border-radius:99px; font-weight:600; border:2px solid currentColor; }
+  .prohibido, .critica, .vencido { color:var(--bad); } .restringido, .solo_ftl, .advertencia { color:var(--warn); } .permitido, .vigente { color:var(--ok); }
+  ol.tl { margin:0; padding-left:1.2rem; } ol.tl li[aria-current] { font-weight:700; }
+  progress { width:100%; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:.5rem; }
+  .kpi { border:1px solid var(--bd); border-radius:8px; padding:.5rem; } .kpi b { display:block; font-size:1.3rem; }
+  .scroll { overflow-x:auto; }
+  footer { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--bd); }
+  footer form { max-width:820px; margin:0 auto; display:flex; gap:.5rem; padding:.75rem 1rem; }
+  footer input { flex:1; min-width:0; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<header>
+  <h1>TransLogix · demo del chat</h1>
+  <form id="login" aria-label="Iniciar sesión (opcional)">
+    <input id="email" type="email" placeholder="correo (opcional)" autocomplete="username" aria-label="Correo">
+    <input id="clave" type="password" placeholder="contraseña" autocomplete="current-password" aria-label="Contraseña">
+    <button>Entrar</button>
+  </form>
+  <span id="quien" class="meta">Invitado</span>
+  <label class="meta"><input type="checkbox" id="admin"> Chat admin</label>
+</header>
+<main>
+  <div id="chat" aria-live="polite"></div>
+</main>
+<footer>
+  <form id="enviar">
+    <label for="texto" class="sr">Mensaje</label>
+    <input id="texto" maxlength="2000" placeholder="Escribe: quiero cotizar · TLX-984021-CO · ¿puedo enviar un perro?" autocomplete="off" required>
+    <button>Enviar</button>
+  </form>
+</footer>
+<script>
+"use strict";
+const API = "/api/v1"; // relativa al mismo origen que sirve /demo
+const $ = (s, r = document) => r.querySelector(s);
+const chat = $("#chat");
+let token = null, sesion = null, ocupado = false;
+
+// --- utilidades -------------------------------------------------------------------------------
+function el(tag, props = {}, ...hijos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null && v !== false) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const h of hijos.flat()) if (h !== null && h !== undefined) e.append(h instanceof Node ? h : String(h));
+  return e;
+}
+const cop = v => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 2 }).format(Number(v));
+const fecha = v => !v ? "—" : v.length === 10
+  ? new Date(`${v}T12:00:00`).toLocaleDateString("es-CO", { dateStyle: "medium" })  // fecha sola: sin corrimiento UTC
+  : new Date(v).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" });
+function fmt(v, tipo) {
+  if (v === null || v === undefined) return "—";
+  if (tipo === "moneda") return cop(v);
+  if (tipo === "porcentaje") return `${Number(v).toLocaleString("es-CO")} %`;
+  if (tipo === "duracion_ms") return `${(Number(v) / 1000).toLocaleString("es-CO")} s`;
+  if (tipo === "fecha") return fecha(v);
+  if (typeof v === "boolean") return v ? "Sí" : "No";
+  return String(v);
+}
+function cabeceras(extra = {}) { return { ...(token && { Authorization: `Bearer ${token}` }), ...extra }; }
+async function problema(r) { try { const p = await r.json(); return p; } catch { return { title: `Error ${r.status}` }; } }
+
+// --- sesión y login ---------------------------------------------------------------------------
+$("#login").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const r = await fetch(`${API}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: $("#email").value, password: $("#clave").value }) });
+  if (!r.ok) { const p = await problema(r); $("#quien").textContent = p.detail || p.title; return; }
+  const d = await r.json(); token = d.access_token; sesion = null;
+  $("#quien").textContent = `Conectado: ${$("#email").value}`;
+});
+
+async function asegurarSesion() {
+  if (sesion || $("#admin").checked) return;
+  const r = await fetch(`${API}/chat/sesiones`, { method: "POST", headers: cabeceras({ "Content-Type": "application/json" }), body: "{}" });
+  if (!r.ok) throw await problema(r);
+  const d = await r.json(); sesion = d.id || d.sesion_id;
+}
+
+// --- envío y lectura SSE ----------------------------------------------------------------------
+async function enviar(cuerpo, endpoint, etiquetaUsuario) {
+  if (ocupado) return; ocupado = true;
+  if (etiquetaUsuario) chat.append(el("div", { class: "yo" }, etiquetaUsuario));
+  const turno = el("article", { class: "turno", "aria-busy": "true" });
+  const meta = el("div", { class: "meta" }, "…"), arts = el("div"), texto = el("p", { style: "margin:0" });
+  turno.append(meta, arts, texto); chat.append(turno); turno.scrollIntoView({ block: "end" });
+  try {
+    await asegurarSesion();
+    const url = endpoint || ($("#admin").checked ? `${API}/admin/chat` : `${API}/chat/sesiones/${sesion}/mensajes`);
+    const r = await fetch(url, { method: "POST", headers: cabeceras({ "Content-Type": "application/json", Accept: "text/event-stream" }), body: JSON.stringify(cuerpo) });
+    if (!r.ok) throw await problema(r);
+    const lector = r.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await lector.read();
+      if (done) break;
+      buf += value;
+      let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) {
+        const bloque = buf.slice(0, i); buf = buf.slice(i + 2);
+        let evento = "message", data = "";
+        for (const l of bloque.split("\n")) {
+          if (l.startsWith(":")) continue;
+          if (l.startsWith("event:")) evento = l.slice(6).trim(); else if (l.startsWith("data:")) data += l.slice(5).trim();
+        }
+        if (data) manejar(evento, JSON.parse(data), { meta, arts, texto });
+      }
+    }
+  } catch (p) {
+    errorEn(arts, p);
+  } finally { turno.removeAttribute("aria-busy"); ocupado = false; turno.scrollIntoView({ block: "end" }); }
+}
+
+function errorEn(cont, p) {
+  cont.append(el("p", { class: "err", role: "alert" }, `${p.title || "Error"}${p.detail ? ": " + p.detail : ""}`,
+    ...(p.errores || []).map(e => el("span", { style: "display:block" }, `${e.campo}: ${e.mensaje}`))));
+}
+
+function manejar(evento, d, { meta, arts, texto }) {
+  switch (evento) {
+    case "meta": meta.textContent = `intención: ${d.intencion}`; break;
+    case "artifact": arts.append(pintar(d.artifact)); break;
+    case "delta": texto.textContent += d.texto; break;
+    case "reemplazo": texto.textContent = d.texto; texto.title = `Corregido por el verificador (${d.motivo})`; break;
+    case "citas": texto.after(el("p", { class: "meta" }, "Fuentes: ", d.citas.map(c => `${c.doc_codigo} · ${c.seccion}`).join(" | "))); break;
+    case "escalamiento": arts.append(el("p", { class: "badge advertencia", role: "status" }, `Transfiriendo a un asesor (${d.criterio}) · espera ~${d.espera_estimada_s} s`)); break;
+    case "fin": meta.textContent += ` · confianza ${d.confianza.toFixed(2)} · ${Math.round(d.latencias_ms.total)} ms`; break;
+    case "error": errorEn(arts, d); break;
+  }
+}
+
+// --- render de artifacts ----------------------------------------------------------------------
+function botones(a, enForm = false) {
+  return el("div", { class: "chips" }, (a.acciones || []).map(ac => el("button", {
+    type: ac.tipo === "submit" && enForm ? "submit" : "button", class: ac.estilo,
+    onclick: ac.tipo === "submit" && enForm ? undefined : () => accion(a, ac, {}),
+  }, ac.etiqueta)));
+}
+
+function accion(a, ac, valores) {
+  if (ac.tipo === "mensaje") return enviar({ tipo: "texto", texto: ac.mensaje }, null, ac.mensaje);
+  if (ac.tipo === "submit") return enviar({ tipo: "artifact_submit", artifact_id: a.id, valores }, ac.endpoint, `↳ ${ac.etiqueta}`);
+  if (ac.tipo === "enlace") {
+    if ((ac.metodo || "GET") === "GET") return window.open(ac.endpoint, "_blank", "noopener");
+    let extra = {};
+    if (a.tipo === "encuesta_satisfaccion") {
+      const sel = document.querySelector(`input[name="csat-${a.id}"]:checked`);
+      extra = { puntaje: sel ? Number(sel.value) : null, comentario: document.getElementById(`com-${a.id}`)?.value || null };
+    }
+    fetch(ac.endpoint, { method: ac.metodo, headers: cabeceras({ "Content-Type": "application/json" }), body: JSON.stringify({ ...(ac.payload || {}), ...extra }) })
+      .then(async r => chat.append(el("p", { class: "meta", role: "status" }, r.ok ? "Enviado. ¡Gracias!" : ((await problema(r)).title))));
+  }
+}
+
+function control(c, idBase) {
+  const id = `${idBase}-${c.nombre}`, ayuda = c.ayuda ? `${id}-ayuda` : null;
+  const comunes = { id, name: c.nombre, required: c.requerido, "aria-describedby": ayuda };
+  let input;
+  if (c.tipo === "seleccion") {
+    input = el("select", comunes, c.requerido ? null : el("option", { value: "" }, "—"),
+      c.opciones.map(o => el("option", { value: o.valor, selected: o.valor === c.valor }, o.etiqueta)));
+  } else if (c.tipo === "booleano") {
+    input = el("input", { ...comunes, type: "checkbox", required: false, checked: c.valor === true });
+  } else if (c.tipo === "texto" && Number(c.max || 0) > 200) {
+    input = el("textarea", { ...comunes, minlength: c.min, maxlength: c.max, rows: 3 }, c.valor ?? "");
+  } else {
+    const tipos = { numero: "number", moneda: "number", fecha: "date", archivo: "file", texto: "text" };
+    input = el("input", { ...comunes, type: tipos[c.tipo], step: c.tipo === "numero" ? "any" : c.tipo === "moneda" ? "0.01" : undefined,
+      min: c.tipo === "texto" ? undefined : c.min, max: c.tipo === "texto" ? undefined : c.max,
+      minlength: c.tipo === "texto" ? c.min : undefined, maxlength: c.tipo === "texto" ? c.max : undefined,
+      pattern: c.patron ? c.patron.replace(/^\^|\$$/g, "") : undefined, accept: c.accept,
+      inputmode: c.tipo === "moneda" ? "numeric" : c.tipo === "numero" ? "decimal" : undefined,
+      value: c.tipo !== "archivo" && c.valor != null ? c.valor : undefined });
+  }
+  return el("label", { for: id }, `${c.etiqueta}${c.unidad ? ` (${c.unidad})` : ""}${c.requerido ? " *" : ""}`, input,
+    ayuda ? el("small", { id: ayuda, class: "meta" }, c.ayuda) : null);
+}
+
+function formulario(a) {
+  const f = el("form", { class: "f", novalidate: false }, a.campos.map(c => control(c, a.id)), botones(a, true));
+  f.addEventListener("submit", ev => {
+    ev.preventDefault();
+    const valores = {};
+    for (const c of a.campos) {
+      const i = f.elements[c.nombre];
+      if (c.tipo === "booleano") valores[c.nombre] = i.checked;
+      else if (c.tipo === "archivo") valores[c.nombre] = i.dataset.id || null; // ponytail: carga previa no implementada en la demo
+      else if (i.value !== "") valores[c.nombre] = c.tipo === "texto" && c.nombre === "guia" ? i.value.toUpperCase() : i.value;
+    }
+    const sub = (a.acciones || []).find(x => x.tipo === "submit");
+    if (sub) accion(a, sub, valores);
+  });
+  return f;
+}
+
+function tabla(columnas, filas) {
+  return el("div", { class: "scroll" }, el("table", {},
+    el("thead", {}, el("tr", {}, columnas.map(c => el("th", { scope: "col" }, c.etiqueta)))),
+    el("tbody", {}, filas.map(f => el("tr", {}, columnas.map(c => el("td", { class: ["numero", "moneda"].includes(c.tipo) ? "num" : "" },
+      c.tipo === "estado" ? el("span", { class: "badge" }, f[c.clave]) : fmt(f[c.clave], c.tipo))))))));
+}
+
+function pintar(a) {
+  const titulo = a.titulo || a.tipo.replaceAll("_", " ");
+  const hId = `h-${a.id}`;
+  const s = el("section", { class: "art", "aria-labelledby": hId }, el("h2", { id: hId }, titulo));
+  const add = (...n) => s.append(...n.filter(x => x !== null && x !== undefined));
+  switch (a.tipo) {
+    case "formulario_cotizacion": case "formulario_guia": case "formulario_pqrs":
+      add(formulario(a)); return s;
+    case "resultado_cotizacion":
+      add(tabla([{ clave: "k", etiqueta: "Concepto" }, { clave: "v", etiqueta: "Valor", tipo: "texto" }], [
+        { k: "Trayecto", v: `${a.trayecto} · ${a.origen} → ${a.destino}` },
+        { k: "Peso facturable", v: `${a.peso_facturable_kg} kg (${a.base_facturacion})` },
+        { k: "Tarifa por kg", v: cop(a.tarifa_kg) },
+        { k: "Flete base", v: cop(a.flete_base) + (a.flete_minimo_aplicado ? " (mínimo)" : "") },
+        { k: "Seguro", v: cop(a.seguro) },
+        ...a.recargos.map(r => ({ k: r.concepto, v: cop(r.valor) })),
+        { k: "Total", v: cop(a.total) },
+        { k: "Tiempo estimado", v: `${a.tiempo_estimado_horas} h` },
+      ]), a.observaciones ? el("p", { class: "meta" }, a.observaciones) : null, ...(a.advertencias || []).map(w => el("p", { class: "advertencia" }, w)));
+      break;
+    case "linea_tiempo_envio":
+      add(el("p", {}, el("strong", {}, a.estado_texto), ` · ${a.origen} → ${a.destino} · ETA ${fecha(a.eta)}`),
+        el("progress", { max: 100, value: a.progreso_pct, "aria-label": `Progreso ${a.progreso_pct} %` }),
+        a.alerta ? el("p", { class: `badge ${a.alerta.nivel}`, role: "alert" }, a.alerta.mensaje) : null,
+        el("ol", { class: "tl" }, a.eventos.map((e, i) => el("li", { "aria-current": i === a.eventos.length - 1 ? "step" : null },
+          `${fecha(e.ts)} — ${e.estado_texto}${e.ubicacion ? ` (${e.ubicacion})` : ""}`, e.descripcion ? el("div", { class: "meta" }, e.descripcion) : null))));
+      break;
+    case "mapa_ubicacion":
+      add(el("p", {}, a.referencia || "Ubicación actual"), el("a", { href: `https://www.openstreetmap.org/?mlat=${a.latitud}&mlon=${a.longitud}#map=12/${a.latitud}/${a.longitud}`, target: "_blank", rel: "noopener" }, `Ver en mapa (${a.latitud}, ${a.longitud})`));
+      break;
+    case "veredicto_mercancia":
+      add(el("p", {}, el("span", { class: `badge ${a.veredicto}` }, a.veredicto.replace("_", " ").toUpperCase()), ` ${a.producto}${a.clase_onu ? ` · Clase ONU ${a.clase_onu}` : ""}`),
+        el("p", {}, a.motivo));
+      for (const [k, t] of [["condiciones", "Condiciones"], ["documentos", "Documentos"], ["embalaje", "Embalaje"]])
+        if (a[k].length) add(el("h3", { style: "font-size:.95rem;margin:.3rem 0" }, t), el("ul", {}, a[k].map(x => el("li", {}, x))));
+      if (a.fuentes.length) add(el("p", { class: "meta" }, "Fuente: ", a.fuentes.map(f => `${f.doc_codigo} · ${f.seccion}`).join(" | ")));
+      break;
+    case "guia_embalaje":
+      add(el("p", {}, el("strong", {}, `${a.categoria}. ${a.nombre_categoria}`)), a.requisito ? el("p", {}, a.requisito) : null, el("ol", {}, a.pasos.map(p => el("li", {}, p))));
+      break;
+    case "ficha_cobertura":
+      add(tabla([{ clave: "k", etiqueta: "Dato" }, { clave: "v", etiqueta: "Valor" }], [
+        { k: "Municipio", v: `${a.municipio}, ${a.departamento} (${a.codigo_dane})` }, { k: "Cobertura", v: a.tipo_cobertura },
+        { k: "Hub", v: a.hub }, { k: "Same day", v: a.same_day }, { k: "Refrigerado", v: a.refrigerado },
+        { k: "Peso máximo", v: `${a.peso_maximo_kg} kg` }, { k: "Volumen máximo", v: `${a.volumen_maximo_m3} m³` },
+        { k: "Tiempo estándar", v: `${a.tiempo_estandar_horas} h` }, { k: "Frecuencia", v: a.frecuencia_despacho }, { k: "Restricciones", v: a.restricciones }]));
+      break;
+    case "estado_plazo":
+      add(el("p", {}, el("span", { class: `badge ${a.vigente ? "vigente" : "vencido"}` }, a.vigente ? "EN PLAZO" : "VENCIDO"),
+        ` Límite: ${fecha(a.fecha_limite)} · ${a.dias_habiles_restantes} días hábiles`), el("p", {}, a.mensaje), a.fundamento ? el("p", { class: "meta" }, a.fundamento) : null);
+      break;
+    case "checklist_documentos":
+      add(el("ul", { style: "list-style:none;padding:0" }, a.items.map(it => el("li", {},
+        el("label", { style: "display:flex;gap:.5rem;align-items:center" }, el("input", { type: "checkbox", checked: it.completado, disabled: true }), it.etiqueta + (it.requerido ? " *" : "")),
+        it.descripcion ? el("div", { class: "meta" }, it.descripcion) : null,
+        !it.completado && it.accept && a.endpoint_carga ? el("input", { type: "file", accept: it.accept, "aria-label": `Adjuntar ${it.etiqueta}`, onchange: ev => subir(a, it, ev.target) }) : null))), botones(a));
+      break;
+    case "ticket_pqrs":
+      add(el("p", {}, "Radicado: ", el("strong", {}, a.radicado), ` (${a.tipo_pqrs}) · responde antes del ${fecha(a.fecha_limite_respuesta)}`),
+        a.liquidacion_estimada ? el("p", {}, `Liquidación estimada: ${cop(a.liquidacion_estimada.total)} — ${a.liquidacion_estimada.nota}`) : null);
+      break;
+    case "aviso_escalamiento":
+      add(el("p", { role: "status" }, a.mensaje), el("p", { class: "meta" }, `Espera estimada ${a.espera_estimada_s} s${a.posicion_cola ? ` · posición ${a.posicion_cola}` : ""}`));
+      break;
+    case "citas":
+      add(el("ul", {}, a.citas.map(c => el("li", {}, `${c.documento} — ${c.seccion}`))));
+      break;
+    case "respuestas_rapidas": case "confirmacion":
+      if (a.mensaje) add(el("p", {}, a.mensaje));
+      add(botones(a)); return s;
+    case "encuesta_satisfaccion":
+      add(el("fieldset", {}, el("legend", {}, a.pregunta), Array.from({ length: a.escala_max - a.escala_min + 1 }, (_, i) => a.escala_min + i)
+        .map(n => el("label", { style: "display:inline-flex;gap:.2rem;margin-right:.6rem" }, el("input", { type: "radio", name: `csat-${a.id}`, value: n }), String(n)))),
+        a.permite_comentario ? el("textarea", { id: `com-${a.id}`, rows: 2, maxlength: 500, "aria-label": "Comentario" }) : null);
+      break;
+    case "tarjetas_kpi":
+      add(el("div", { class: "kpis" }, a.tarjetas.map(k => el("div", { class: "kpi" }, k.etiqueta, el("b", {}, fmt(k.valor, k.formato) + (k.unidad ? ` ${k.unidad}` : "")), k.tendencia ? el("span", { class: "meta" }, k.tendencia) : null))));
+      break;
+    case "grafico": {
+      const xs = [...new Set(a.series.flatMap(se => se.puntos.map(p => p.x)))];
+      add(el("p", { class: "meta" }, `${a.tipo_grafico} · ${a.eje_y.etiqueta}${a.datos_simulados ? " · DATOS SIMULADOS" : ""}`),
+        tabla([{ clave: "x", etiqueta: a.eje_x.etiqueta }, ...a.series.map((se, i) => ({ clave: `s${i}`, etiqueta: se.nombre, tipo: "numero" }))],
+          xs.map(x => Object.fromEntries([["x", x], ...a.series.map((se, i) => { const p = se.puntos.find(q => q.x === x); return [`s${i}`, p ? (p.y_inf ? `${p.y} (${p.y_inf}–${p.y_sup})` : p.y) : null]; })]))));
+      break;
+    }
+    case "tabla_datos":
+      add(tabla(a.columnas, a.filas), a.paginacion ? el("p", { class: "meta" }, `Página ${a.paginacion.pagina} · ${a.paginacion.total} registros`) : null);
+      break;
+    case "tarjeta_prediccion":
+      add(el("p", {}, el("span", { class: "badge" }, `Riesgo ${a.nivel}`), ` ${Math.round(Number(a.probabilidad) * 100)} %${a.guia ? ` · ${a.guia}` : ""}${a.datos_simulados ? " · DATOS SIMULADOS" : ""}`),
+        el("ul", {}, a.factores.map(f => el("li", {}, `${f.descripcion || f.nombre}: ${Number(f.efecto) >= 0 ? "+" : ""}${f.efecto}`))));
+      break;
+    case "metricas_modelo":
+      add(tabla([{ clave: "n", etiqueta: "Modelo" }, { clave: "e", etiqueta: "Estado", tipo: "estado" }, { clave: "m", etiqueta: "Métricas" }, { clave: "b", etiqueta: "Línea base" }],
+        a.modelos.map(m => ({ n: `${m.nombre} v${m.version} (${m.algoritmo})`, e: m.estado, m: JSON.stringify(m.metricas), b: JSON.stringify(m.linea_base) }))));
+      break;
+    case "cola_escalamientos":
+      add(tabla([{ clave: "criterio", etiqueta: "Criterio" }, { clave: "prioridad", etiqueta: "Prioridad", tipo: "estado" }, { clave: "estado", etiqueta: "Estado", tipo: "estado" }, { clave: "espera_s", etiqueta: "Espera (s)", tipo: "numero" }, { clave: "resumen", etiqueta: "Resumen" }], a.items));
+      break;
+    default:
+      add(el("pre", { class: "scroll" }, JSON.stringify(a, null, 2)));  // tipo desconocido: se muestra crudo
+  }
+  if (a.acciones?.length && !["formulario_cotizacion", "formulario_guia", "formulario_pqrs", "checklist_documentos"].includes(a.tipo)) add(botones(a));
+  return s;
+}
+
+async function subir(a, item, input) {
+  const fd = new FormData(); fd.append("archivo", input.files[0]); fd.append("tipo_documento", item.id);
+  const r = await fetch(a.endpoint_carga, { method: "POST", headers: cabeceras(), body: fd });
+  input.after(el("span", { class: r.ok ? "meta" : "err", role: "status" }, r.ok ? " ✓ cargado" : ` ${(await problema(r)).title}`));
+}
+
+$("#enviar").addEventListener("submit", ev => {
+  ev.preventDefault();
+  const t = $("#texto").value.trim(); if (!t) return;
+  $("#texto").value = "";
+  enviar({ tipo: "texto", texto: t }, null, t);
+});
+$("#admin").addEventListener("change", () => chat.append(el("p", { class: "meta" }, $("#admin").checked ? "Modo chat admin (requiere login de admin)." : "Modo chat de cliente.")));
+</script>
+</body>
+</html>
