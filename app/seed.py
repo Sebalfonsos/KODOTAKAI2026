@@ -115,8 +115,13 @@ async def cargar_catalogos(s: AsyncSession, datos: Path) -> dict[str, str]:
 
     deps = {m["codigo_dane"][:2]: m["departamento"] for m in directorio}
     await _upsert(s, Departamento, [{"codigo": c, "nombre": n} for c, n in deps.items()], ["codigo"])
-    await _upsert(s, Hub, [{"nombre": n} for n in sorted({m["hub_operativo_asignado"] for m in directorio})],
-                  ["nombre"], actualizar=False)  # fmt: skip
+    await _upsert(
+        s,
+        Hub,
+        [{"nombre": n} for n in sorted({m["hub_operativo_asignado"] for m in directorio})],
+        ["nombre"],
+        actualizar=False,
+    )
     hubs = dict((await s.execute(select(Hub.nombre, Hub.id))).all())
 
     await _upsert(

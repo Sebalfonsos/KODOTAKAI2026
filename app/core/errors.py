@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_var
+from app.domain import ErrorDominio
 
 log = logging.getLogger("app.errors")
 PROBLEM = "application/problem+json"
@@ -28,6 +29,10 @@ TITULOS = {
     503: "Servicio no disponible",
     504: "Tiempo de espera agotado",
 }
+
+
+# Reglas de negocio violadas → 422; recursos inexistentes → 404.
+ESTADO_DOMINIO = {"TRAYECTO_INEXISTENTE": 404, "SIN_COBERTURA": 404}
 
 
 class Problema(BaseModel):
@@ -87,6 +92,10 @@ def registrar(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api(request: Request, exc: ApiError):
         return problema(request, exc.status, exc.detail, exc.codigo, exc.errores, exc.headers)
+
+    @app.exception_handler(ErrorDominio)
+    async def _dominio(request: Request, exc: ErrorDominio):
+        return problema(request, ESTADO_DOMINIO.get(exc.codigo, 422), exc.mensaje, exc.codigo)
 
     @app.exception_handler(RequestValidationError)
     async def _validacion(request: Request, exc: RequestValidationError):
