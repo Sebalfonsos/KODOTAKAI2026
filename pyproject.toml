@@ -31,6 +31,7 @@ ignore = ["S101", "B008"]  # B008: Depends() en argumentos es el idioma de FastA
 
 [tool.ruff.lint.per-file-ignores]
 "app/ai/herramientas_admin.py" = ["E501"]  # consultas SQL legibles en una línea
+"tests/load.py" = ["S603", "S607"]  # invoca nvidia-smi para medir VRAM
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

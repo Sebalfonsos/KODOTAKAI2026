@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.eventos import suscribir
 from app.ai.orquestador import Entrada, agregar, ejecutar, ejecutar_admin, formulario_guardado
+from app.config import get_settings
 from app.core.errors import ApiError, respuestas
 from app.core.ratelimit import limite
 from app.core.security import Actor, ActorOpcional, SoloAdmin
@@ -75,7 +76,7 @@ async def sesion_propia(s: AsyncSession, sesion_id: uuid.UUID, actor: Actor) -> 
     response_model=SesionOut,
     summary="Iniciar una conversación",
     responses=respuestas(429),
-    dependencies=[Depends(limite("sesiones", 20, 3600))],
+    dependencies=[Depends(limite("sesiones", get_settings().rate_chat_por_min, 3600))],
 )
 async def crear_sesion(actor: ActorOpcional, s: AsyncSession = Depends(get_session)):
     """Invitados y clientes. Con token, la sesión queda ligada al usuario (habilita PQRS y datos de su cuenta)."""
@@ -130,7 +131,7 @@ async def historial(sesion_id: uuid.UUID, actor: ActorOpcional, s: AsyncSession 
         },
         **respuestas(404, 422, 429),
     },
-    dependencies=[Depends(limite("chat", 30, 60))],
+    dependencies=[Depends(limite("chat", get_settings().rate_chat_por_min, 60))],
 )
 async def enviar(
     sesion_id: uuid.UUID,

@@ -1,4 +1,4 @@
-"""Chat con LLM y RAG simulados: prueba el pipeline (artifacts, verificador, escalamiento, SSE) sin depender de la GPU."""
+"""Chat con LLM y RAG simulados: prueba el pipeline (artifacts, verificador, escalamiento, SSE) sin la GPU."""
 
 import json
 
@@ -146,7 +146,8 @@ async def test_sse_formato_y_orden(cliente, llm):
 
 async def test_sesion_de_usuario_es_privada(cliente, llm, h_cliente, h_vip):
     sid = await _sesion(cliente, h_cliente)
-    r = await cliente.post(f"{B}/{sid}/mensajes?stream=false", json={"tipo": "texto", "texto": "hola"}, headers=h_vip)
+    cuerpo = {"tipo": "texto", "texto": "hola"}
+    r = await cliente.post(f"{B}/{sid}/mensajes?stream=false", json=cuerpo, headers=h_vip)
     problema(r, 404, "SESION_NO_ENCONTRADA")
     r = await cliente.get(f"{B}/{sid}")
     problema(r, 404, "SESION_NO_ENCONTRADA")

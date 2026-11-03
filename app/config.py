@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     upload_dir: Path = RAIZ / "var" / "uploads"
     max_upload_bytes: int = 10 * 1024 * 1024
     max_mensaje_chars: int = 2000
+    rate_chat_por_min: int = 30  # por usuario o IP; subirlo solo para pruebas de carga
 
     ml_check_min: int = Field(default=10, ge=1)
     ml_min_nuevos: int = Field(default=200, ge=1)
