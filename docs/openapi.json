@@ -1,0 +1,3354 @@
+{
+  "components": {
+    "schemas": {
+      "Body_adjuntar_api_v1_pqrs__radicado__documentos_post": {
+        "properties": {
+          "archivo": {
+            "contentMediaType": "application/octet-stream",
+            "description": "PDF, JPG o PNG; el tipo se verifica por su firma binaria",
+            "title": "Archivo",
+            "type": "string"
+          },
+          "tipo_documento": {
+            "$ref": "#/components/schemas/TipoDocumento"
+          }
+        },
+        "required": [
+          "tipo_documento",
+          "archivo"
+        ],
+        "title": "Body_adjuntar_api_v1_pqrs__radicado__documentos_post",
+        "type": "object"
+      },
+      "ClaseOnuOut": {
+        "properties": {
+          "codigo": {
+            "examples": [
+              "8"
+            ],
+            "title": "Codigo",
+            "type": "string"
+          },
+          "condiciones": {
+            "title": "Condiciones",
+            "type": "string"
+          },
+          "nombre": {
+            "examples": [
+              "Sustancias corrosivas"
+            ],
+            "title": "Nombre",
+            "type": "string"
+          },
+          "politica": {
+            "examples": [
+              "restringido"
+            ],
+            "title": "Politica",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "nombre",
+          "politica",
+          "condiciones"
+        ],
+        "title": "ClaseOnuOut",
+        "type": "object"
+      },
+      "Componente": {
+        "properties": {
+          "latencia_ms": {
+            "title": "Latencia Ms",
+            "type": "number"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "latencia_ms"
+        ],
+        "title": "Componente",
+        "type": "object"
+      },
+      "CotizacionIn": {
+        "additionalProperties": false,
+        "examples": [
+          {
+            "alto_cm": 40,
+            "ancho_cm": 50,
+            "cadena_frio": true,
+            "contenido": "medicamentos refrigerados",
+            "destino": "Medellín",
+            "largo_cm": 60,
+            "mercancia_peligrosa": false,
+            "modalidad": "carga",
+            "origen": "Bogotá D.C.",
+            "peso_kg": 45.5,
+            "unidades": 2,
+            "valor_declarado": 12500000
+          }
+        ],
+        "properties": {
+          "alto_cm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Alto Cm"
+          },
+          "ancho_cm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Ancho Cm"
+          },
+          "cadena_frio": {
+            "default": false,
+            "title": "Cadena Frio",
+            "type": "boolean"
+          },
+          "contenido": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Descripción del contenido: se valida contra la lista de prohibidos",
+            "title": "Contenido"
+          },
+          "destino": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Destino",
+            "type": "string"
+          },
+          "largo_cm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 2000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Largo Cm"
+          },
+          "mercancia_peligrosa": {
+            "default": false,
+            "title": "Mercancia Peligrosa",
+            "type": "boolean"
+          },
+          "modalidad": {
+            "default": "paqueteria",
+            "enum": [
+              "paqueteria",
+              "carga"
+            ],
+            "title": "Modalidad",
+            "type": "string"
+          },
+          "origen": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Origen",
+            "type": "string"
+          },
+          "peso_kg": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 40000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Peso Kg"
+          },
+          "unidades": {
+            "default": 1,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Unidades",
+            "type": "integer"
+          },
+          "valor_declarado": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 10000000000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "COP",
+            "title": "Valor Declarado"
+          }
+        },
+        "required": [
+          "origen",
+          "destino",
+          "alto_cm",
+          "ancho_cm",
+          "largo_cm",
+          "peso_kg",
+          "valor_declarado"
+        ],
+        "title": "CotizacionIn",
+        "type": "object"
+      },
+      "CotizacionOut": {
+        "properties": {
+          "codigo_trayecto": {
+            "examples": [
+              "TLX-BOG-MED-001"
+            ],
+            "title": "Codigo Trayecto",
+            "type": "string"
+          },
+          "desglose": {
+            "$ref": "#/components/schemas/DesgloseOut"
+          },
+          "destino": {
+            "title": "Destino",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "moneda": {
+            "default": "COP",
+            "title": "Moneda",
+            "type": "string"
+          },
+          "observaciones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Observaciones",
+            "type": "array"
+          },
+          "origen": {
+            "title": "Origen",
+            "type": "string"
+          },
+          "tiempo_estimado_horas": {
+            "title": "Tiempo Estimado Horas",
+            "type": "integer"
+          },
+          "total": {
+            "description": "COP redondeado a pesos (ROUND_HALF_UP)",
+            "examples": [
+              207469
+            ],
+            "title": "Total",
+            "type": "string"
+          },
+          "version_reglas": {
+            "examples": [
+              "2026.1"
+            ],
+            "title": "Version Reglas",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "codigo_trayecto",
+          "origen",
+          "destino",
+          "desglose",
+          "total",
+          "tiempo_estimado_horas",
+          "observaciones",
+          "version_reglas"
+        ],
+        "title": "CotizacionOut",
+        "type": "object"
+      },
+      "DesgloseOut": {
+        "properties": {
+          "base_cobro": {
+            "enum": [
+              "real",
+              "volumetrico"
+            ],
+            "title": "Base Cobro",
+            "type": "string"
+          },
+          "flete": {
+            "title": "Flete",
+            "type": "string"
+          },
+          "flete_base": {
+            "title": "Flete Base",
+            "type": "string"
+          },
+          "flete_minimo_aplicado": {
+            "title": "Flete Minimo Aplicado",
+            "type": "boolean"
+          },
+          "peso_facturable_kg": {
+            "title": "Peso Facturable Kg",
+            "type": "string"
+          },
+          "peso_real_kg": {
+            "title": "Peso Real Kg",
+            "type": "string"
+          },
+          "peso_volumetrico_kg": {
+            "title": "Peso Volumetrico Kg",
+            "type": "string"
+          },
+          "recargo_cadena_frio": {
+            "title": "Recargo Cadena Frio",
+            "type": "string"
+          },
+          "recargo_mercancia_peligrosa": {
+            "title": "Recargo Mercancia Peligrosa",
+            "type": "string"
+          },
+          "seguro": {
+            "title": "Seguro",
+            "type": "string"
+          },
+          "tarifa_aplicada_kg": {
+            "title": "Tarifa Aplicada Kg",
+            "type": "string"
+          },
+          "total_sin_redondeo": {
+            "title": "Total Sin Redondeo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "peso_real_kg",
+          "peso_volumetrico_kg",
+          "peso_facturable_kg",
+          "base_cobro",
+          "tarifa_aplicada_kg",
+          "flete_base",
+          "flete_minimo_aplicado",
+          "flete",
+          "recargo_cadena_frio",
+          "recargo_mercancia_peligrosa",
+          "seguro",
+          "total_sin_redondeo"
+        ],
+        "title": "DesgloseOut",
+        "type": "object"
+      },
+      "DetalleEnvioOut": {
+        "description": "Solo para el titular de la cuenta, asesores y administradores.",
+        "properties": {
+          "destinatario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destinatario"
+          },
+          "direccion_entrega": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Entrega"
+          },
+          "documento_receptor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "C.C. **.**9.432"
+            ],
+            "title": "Documento Receptor"
+          },
+          "observaciones_entrega": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observaciones Entrega"
+          },
+          "peso_facturable_kg": {
+            "title": "Peso Facturable Kg",
+            "type": "string"
+          },
+          "recibido_por": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recibido Por"
+          },
+          "remitente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitente"
+          },
+          "unidades": {
+            "title": "Unidades",
+            "type": "integer"
+          },
+          "valor_declarado": {
+            "title": "Valor Declarado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "remitente",
+          "destinatario",
+          "direccion_entrega",
+          "peso_facturable_kg",
+          "valor_declarado",
+          "unidades"
+        ],
+        "title": "DetalleEnvioOut",
+        "type": "object"
+      },
+      "DocumentoOut": {
+        "properties": {
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mime": {
+            "title": "Mime",
+            "type": "string"
+          },
+          "nombre_original": {
+            "title": "Nombre Original",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "tamano_bytes": {
+            "title": "Tamano Bytes",
+            "type": "integer"
+          },
+          "tipo_documento": {
+            "$ref": "#/components/schemas/TipoDocumento"
+          }
+        },
+        "required": [
+          "id",
+          "tipo_documento",
+          "nombre_original",
+          "mime",
+          "tamano_bytes",
+          "sha256",
+          "creado_en"
+        ],
+        "title": "DocumentoOut",
+        "type": "object"
+      },
+      "EstadoPqrs": {
+        "enum": [
+          "incompleto",
+          "radicado",
+          "en_revision",
+          "aprobado",
+          "rechazado",
+          "cerrado"
+        ],
+        "title": "EstadoPqrs",
+        "type": "string"
+      },
+      "EstadoSalud": {
+        "properties": {
+          "componentes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Componente"
+            },
+            "title": "Componentes",
+            "type": "object"
+          },
+          "estado": {
+            "description": "ok | degradado",
+            "examples": [
+              "ok"
+            ],
+            "title": "Estado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "estado",
+          "componentes"
+        ],
+        "title": "EstadoSalud",
+        "type": "object"
+      },
+      "EventoOut": {
+        "properties": {
+          "descripcion": {
+            "description": "Datos personales enmascarados",
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "estado": {
+            "examples": [
+              "EN_TRANSITO"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "estado_texto": {
+            "title": "Estado Texto",
+            "type": "string"
+          },
+          "ocurrido_en": {
+            "format": "date-time",
+            "title": "Ocurrido En",
+            "type": "string"
+          },
+          "ubicacion": {
+            "title": "Ubicacion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ocurrido_en",
+          "estado",
+          "estado_texto",
+          "ubicacion",
+          "descripcion"
+        ],
+        "title": "EventoOut",
+        "type": "object"
+      },
+      "LiquidacionIn": {
+        "additionalProperties": false,
+        "examples": [
+          {
+            "valor_declarado": 3000000,
+            "valor_factura": 2800000
+          }
+        ],
+        "properties": {
+          "flete_cobrado": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Flete Cobrado"
+          },
+          "negligencia_demostrada": {
+            "default": false,
+            "title": "Negligencia Demostrada",
+            "type": "boolean"
+          },
+          "tipo_siniestro": {
+            "default": "averia_parcial",
+            "enum": [
+              "averia_parcial",
+              "perdida_total",
+              "averia_total"
+            ],
+            "title": "Tipo Siniestro",
+            "type": "string"
+          },
+          "valor_declarado": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Valor Declarado"
+          },
+          "valor_factura": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Valor Factura"
+          }
+        },
+        "required": [
+          "valor_declarado",
+          "valor_factura"
+        ],
+        "title": "LiquidacionIn",
+        "type": "object"
+      },
+      "LiquidacionOut": {
+        "properties": {
+          "aplica_deducible": {
+            "title": "Aplica Deducible",
+            "type": "boolean"
+          },
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "deducible": {
+            "title": "Deducible",
+            "type": "string"
+          },
+          "flete_devuelto": {
+            "title": "Flete Devuelto",
+            "type": "string"
+          },
+          "nota": {
+            "default": "Estimación sujeta a revisión documental; respuesta formal en 15 días hábiles.",
+            "title": "Nota",
+            "type": "string"
+          },
+          "sujeto_aprobacion": {
+            "default": true,
+            "title": "Sujeto Aprobacion",
+            "type": "boolean"
+          },
+          "total": {
+            "examples": [
+              2660000
+            ],
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "deducible",
+          "flete_devuelto",
+          "total",
+          "aplica_deducible"
+        ],
+        "title": "LiquidacionOut",
+        "type": "object"
+      },
+      "LoginIn": {
+        "additionalProperties": false,
+        "examples": [
+          {
+            "email": "cliente@translogix.demo",
+            "password": "••••••••••••"
+          }
+        ],
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "MunicipioOut": {
+        "properties": {
+          "codigo_dane": {
+            "examples": [
+              "27001"
+            ],
+            "title": "Codigo Dane",
+            "type": "string"
+          },
+          "departamento": {
+            "examples": [
+              "Chocó"
+            ],
+            "title": "Departamento",
+            "type": "string"
+          },
+          "frecuencia_despacho": {
+            "title": "Frecuencia Despacho",
+            "type": "string"
+          },
+          "hub": {
+            "title": "Hub",
+            "type": "string"
+          },
+          "nombre": {
+            "examples": [
+              "Quibdó"
+            ],
+            "title": "Nombre",
+            "type": "string"
+          },
+          "peso_maximo_paquete_kg": {
+            "title": "Peso Maximo Paquete Kg",
+            "type": "string"
+          },
+          "restricciones_operativas": {
+            "title": "Restricciones Operativas",
+            "type": "string"
+          },
+          "servicio_refrigerado": {
+            "title": "Servicio Refrigerado",
+            "type": "boolean"
+          },
+          "servicio_same_day": {
+            "title": "Servicio Same Day",
+            "type": "boolean"
+          },
+          "tiempo_entrega_estandar_horas": {
+            "examples": [
+              96
+            ],
+            "title": "Tiempo Entrega Estandar Horas",
+            "type": "integer"
+          },
+          "tipo_cobertura": {
+            "examples": [
+              "zomac"
+            ],
+            "title": "Tipo Cobertura",
+            "type": "string"
+          },
+          "volumen_maximo_m3": {
+            "title": "Volumen Maximo M3",
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo_dane",
+          "nombre",
+          "departamento",
+          "tipo_cobertura",
+          "tiempo_entrega_estandar_horas",
+          "servicio_same_day",
+          "servicio_refrigerado",
+          "peso_maximo_paquete_kg",
+          "volumen_maximo_m3",
+          "hub",
+          "frecuencia_despacho",
+          "restricciones_operativas"
+        ],
+        "title": "MunicipioOut",
+        "type": "object"
+      },
+      "OpcionCiudad": {
+        "properties": {
+          "codigo_dane": {
+            "title": "Codigo Dane",
+            "type": "string"
+          },
+          "codigo_trayecto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Solo en destinos",
+            "title": "Codigo Trayecto"
+          },
+          "etiqueta": {
+            "examples": [
+              "Medellín (Antioquia)"
+            ],
+            "title": "Etiqueta",
+            "type": "string"
+          },
+          "tiempo_entrega_horas": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Entrega Horas"
+          },
+          "valor": {
+            "description": "Nombre a enviar en /cotizar",
+            "examples": [
+              "Medellín"
+            ],
+            "title": "Valor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "valor",
+          "etiqueta",
+          "codigo_dane"
+        ],
+        "title": "OpcionCiudad",
+        "type": "object"
+      },
+      "Pagina_MunicipioOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MunicipioOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "pagina": {
+            "title": "Pagina",
+            "type": "integer"
+          },
+          "tamano": {
+            "title": "Tamano",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "pagina",
+          "tamano"
+        ],
+        "title": "Pagina[MunicipioOut]",
+        "type": "object"
+      },
+      "PlazoOut": {
+        "properties": {
+          "dias_habiles_restantes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dias Habiles Restantes"
+          },
+          "fecha_limite": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Limite"
+          },
+          "fecha_referencia": {
+            "format": "date",
+            "title": "Fecha Referencia",
+            "type": "string"
+          },
+          "fundamento": {
+            "title": "Fundamento",
+            "type": "string"
+          },
+          "numero_guia": {
+            "title": "Numero Guia",
+            "type": "string"
+          },
+          "tipo_averia": {
+            "enum": [
+              "aparente",
+              "oculta",
+              "perdida"
+            ],
+            "title": "Tipo Averia",
+            "type": "string"
+          },
+          "vigente": {
+            "title": "Vigente",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "numero_guia",
+          "tipo_averia",
+          "fecha_referencia",
+          "vigente",
+          "fecha_limite",
+          "dias_habiles_restantes",
+          "fundamento"
+        ],
+        "title": "PlazoOut",
+        "type": "object"
+      },
+      "Problema": {
+        "description": "Cuerpo de error estándar (RFC 9457).",
+        "properties": {
+          "codigo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Código estable para el frontend",
+            "examples": [
+              "GUIA_NO_ENCONTRADA"
+            ],
+            "title": "Codigo"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "No existe la guía TLX-000000-CO."
+            ],
+            "title": "Detail"
+          },
+          "errores": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Detalle por campo (422)",
+            "title": "Errores"
+          },
+          "instance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "/api/v1/tracking/TLX-000000-CO"
+            ],
+            "title": "Instance"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "status": {
+            "examples": [
+              404
+            ],
+            "title": "Status",
+            "type": "integer"
+          },
+          "title": {
+            "examples": [
+              "No encontrado"
+            ],
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "default": "about:blank",
+            "examples": [
+              "https://translogix.demo/errores/trayecto-inexistente"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "status"
+        ],
+        "title": "Problema",
+        "type": "object"
+      },
+      "RefreshIn": {
+        "additionalProperties": false,
+        "properties": {
+          "refresh_token": {
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshIn",
+        "type": "object"
+      },
+      "RegistroIn": {
+        "additionalProperties": false,
+        "examples": [
+          {
+            "email": "ana.perez@correo.co",
+            "nombre": "Ana Pérez",
+            "password": "Clave-Segura-2026"
+          }
+        ],
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "pattern": "^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,180}\\.[A-Za-z]{2,24}$",
+            "title": "Email",
+            "type": "string"
+          },
+          "nombre": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Nombre",
+            "type": "string"
+          },
+          "password": {
+            "description": "Mínimo 12 caracteres, con letras y números",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "nombre",
+          "password"
+        ],
+        "title": "RegistroIn",
+        "type": "object"
+      },
+      "Rol": {
+        "enum": [
+          "cliente",
+          "asesor",
+          "admin"
+        ],
+        "title": "Rol",
+        "type": "string"
+      },
+      "TicketIn": {
+        "additionalProperties": false,
+        "examples": [
+          {
+            "descripcion": "La caja llegó aplastada y el producto interno está roto.",
+            "numero_guia": "TLX-551904-CO",
+            "tipo": "S",
+            "tipo_averia": "oculta",
+            "valor_reclamado": 450000
+          }
+        ],
+        "properties": {
+          "anotada_en_guia": {
+            "default": false,
+            "title": "Anotada En Guia",
+            "type": "boolean"
+          },
+          "descripcion": {
+            "maxLength": 4000,
+            "minLength": 10,
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "numero_guia": {
+            "anyOf": [
+              {
+                "pattern": "^TLX-[0-9]{6}-CO$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero Guia"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoPqrs"
+          },
+          "tipo_averia": {
+            "anyOf": [
+              {
+                "enum": [
+                  "aparente",
+                  "oculta",
+                  "perdida"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Averia"
+          },
+          "valor_reclamado": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 10000000000.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Reclamado"
+          }
+        },
+        "required": [
+          "tipo",
+          "descripcion"
+        ],
+        "title": "TicketIn",
+        "type": "object"
+      },
+      "TicketOut": {
+        "properties": {
+          "checklist": {
+            "additionalProperties": true,
+            "title": "Checklist",
+            "type": "object"
+          },
+          "creado_en": {
+            "format": "date-time",
+            "title": "Creado En",
+            "type": "string"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "documentos": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DocumentoOut"
+            },
+            "title": "Documentos",
+            "type": "array"
+          },
+          "escalado": {
+            "default": false,
+            "title": "Escalado",
+            "type": "boolean"
+          },
+          "estado": {
+            "$ref": "#/components/schemas/EstadoPqrs"
+          },
+          "fecha_limite_respuesta": {
+            "format": "date",
+            "title": "Fecha Limite Respuesta",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "numero_guia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero Guia"
+          },
+          "prioridad": {
+            "title": "Prioridad",
+            "type": "integer"
+          },
+          "radicado": {
+            "examples": [
+              "PQRS-2026-000001"
+            ],
+            "title": "Radicado",
+            "type": "string"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoPqrs"
+          },
+          "tipo_averia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Averia"
+          },
+          "valor_reclamado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Reclamado"
+          }
+        },
+        "required": [
+          "id",
+          "radicado",
+          "tipo",
+          "estado",
+          "numero_guia",
+          "descripcion",
+          "tipo_averia",
+          "valor_reclamado",
+          "fecha_limite_respuesta",
+          "prioridad",
+          "checklist",
+          "creado_en"
+        ],
+        "title": "TicketOut",
+        "type": "object"
+      },
+      "TipoDocumento": {
+        "enum": [
+          "guia",
+          "factura",
+          "carta_reclamacion",
+          "certificacion_bancaria",
+          "foto_empaque",
+          "foto_dano",
+          "foto_amortiguacion",
+          "documento_identidad",
+          "acta_salvedad",
+          "otro"
+        ],
+        "title": "TipoDocumento",
+        "type": "string"
+      },
+      "TipoPqrs": {
+        "enum": [
+          "P",
+          "Q",
+          "R",
+          "S"
+        ],
+        "title": "TipoPqrs",
+        "type": "string"
+      },
+      "TokensOut": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Segundos de vida del access token",
+            "examples": [
+              900
+            ],
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "refresh_token": {
+            "description": "Un solo uso: cada /auth/refresh devuelve uno nuevo",
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/Rol"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in",
+          "refresh_token",
+          "rol"
+        ],
+        "title": "TokensOut",
+        "type": "object"
+      },
+      "TrackingOut": {
+        "properties": {
+          "destino": {
+            "title": "Destino",
+            "type": "string"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetalleEnvioOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null para invitados o cuentas ajenas"
+          },
+          "es_final": {
+            "title": "Es Final",
+            "type": "boolean"
+          },
+          "estado": {
+            "examples": [
+              "EN_TRANSITO"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "estado_texto": {
+            "examples": [
+              "Tu envío va en camino hacia la ciudad de destino."
+            ],
+            "title": "Estado Texto",
+            "type": "string"
+          },
+          "eventos": {
+            "items": {
+              "$ref": "#/components/schemas/EventoOut"
+            },
+            "title": "Eventos",
+            "type": "array"
+          },
+          "fecha_despacho": {
+            "format": "date-time",
+            "title": "Fecha Despacho",
+            "type": "string"
+          },
+          "fecha_entrega_real": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Entrega Real"
+          },
+          "fecha_estimada_entrega": {
+            "format": "date-time",
+            "title": "Fecha Estimada Entrega",
+            "type": "string"
+          },
+          "novedad": {
+            "description": "True si el envío está retenido o en investigación",
+            "title": "Novedad",
+            "type": "boolean"
+          },
+          "numero_guia": {
+            "examples": [
+              "TLX-984021-CO"
+            ],
+            "title": "Numero Guia",
+            "type": "string"
+          },
+          "origen": {
+            "title": "Origen",
+            "type": "string"
+          },
+          "progreso_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              57
+            ],
+            "title": "Progreso Pct"
+          },
+          "servicio": {
+            "title": "Servicio",
+            "type": "string"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/UbicacionOut"
+          }
+        },
+        "required": [
+          "numero_guia",
+          "estado",
+          "estado_texto",
+          "progreso_pct",
+          "es_final",
+          "novedad",
+          "servicio",
+          "origen",
+          "destino",
+          "fecha_despacho",
+          "fecha_estimada_entrega",
+          "fecha_entrega_real",
+          "ubicacion",
+          "eventos"
+        ],
+        "title": "TrackingOut",
+        "type": "object"
+      },
+      "UbicacionOut": {
+        "properties": {
+          "latitud": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitud"
+          },
+          "longitud": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitud"
+          },
+          "referencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referencia"
+          }
+        },
+        "required": [
+          "latitud",
+          "longitud",
+          "referencia"
+        ],
+        "title": "UbicacionOut",
+        "type": "object"
+      },
+      "UsuarioOut": {
+        "properties": {
+          "cuenta_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuenta Id"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/Rol"
+          },
+          "tipo_cuenta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo Cuenta"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "nombre",
+          "rol",
+          "cuenta_id"
+        ],
+        "title": "UsuarioOut",
+        "type": "object"
+      },
+      "VeredictoOut": {
+        "properties": {
+          "categoria_embalaje": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria Embalaje"
+          },
+          "clase_onu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clase Onu"
+          },
+          "documentos_requeridos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Documentos Requeridos",
+            "type": "array"
+          },
+          "fuente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "DOC-OPS-2026-03 §5.5"
+            ],
+            "title": "Fuente"
+          },
+          "motivo": {
+            "title": "Motivo",
+            "type": "string"
+          },
+          "producto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "animales vivos"
+            ],
+            "title": "Producto"
+          },
+          "producto_consultado": {
+            "title": "Producto Consultado",
+            "type": "string"
+          },
+          "veredicto": {
+            "description": "permitido | restringido | solo_ftl | prohibido | desconocido",
+            "examples": [
+              "prohibido"
+            ],
+            "title": "Veredicto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "producto_consultado",
+          "veredicto",
+          "producto",
+          "clase_onu",
+          "motivo",
+          "fuente",
+          "documentos_requeridos",
+          "categoria_embalaje"
+        ],
+        "title": "VeredictoOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "Token de acceso JWT obtenido en /api/v1/auth/login",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "name": "Equipo backend KODO TAKAI 2026"
+    },
+    "description": "\nBackend del **agente de atención con IA local** de TransLogix Colombia S.A.S. (reto KODO TAKAI 2026).\n\n* **IA 100 % local**: LFM3-1.7B (llama.cpp) para lenguaje y `bge-m3` (Ollama) para embeddings.\n  Ningún dato sale del equipo.\n* **RAG** sobre PostgreSQL + pgvector (búsqueda híbrida vectorial + texto completo en español).\n* **Reglas de negocio deterministas**: el modelo no calcula tarifas, plazos ni decide escalamientos.\n* **Chat con artifacts**: cada respuesta puede traer componentes de UI tipados (formularios, líneas de tiempo, tablas…).\n  Ver `docs/frontend.md` y el esquema `Artifact` al final de esta página.\n\n**Roles:** invitado (sin token), `cliente`, `asesor`, `admin`. Autentícate con *Authorize* usando el `access_token`\nde `POST /api/v1/auth/login`.\n\n**Errores:** RFC 9457 (`application/problem+json`) con `codigo` estable y `request_id` para soporte.\n",
+    "title": "TransLogix IA — API del agente de atención",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Devuelve un access token (15 min) y un refresh token de un solo uso.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Iniciar sesión",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Revoca la familia del refresh token indicado (todos sus sucesores).",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cerrar sesión",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "yo_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Perfil del usuario autenticado",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Entrega un par nuevo e invalida el anterior. Reusar un token ya rotado revoca toda su familia.",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Rotar refresh token",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/api/v1/auth/registro": {
+      "post": {
+        "description": "Crea una cuenta con rol `cliente`. Los roles `asesor` y `admin` solo los asigna un administrador.",
+        "operationId": "registrar_api_v1_auth_registro_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Conflicto"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Registrar un cliente",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/api/v1/cobertura/municipios": {
+      "get": {
+        "operationId": "listar_municipios_api_v1_cobertura_municipios_get",
+        "parameters": [
+          {
+            "description": "Texto a buscar (sin importar tildes)",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 60,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Texto a buscar (sin importar tildes)",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo_cobertura",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(urbana_principal|frontera|trayecto_especial|zomac)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tipo Cobertura"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pagina",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Pagina",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tamano",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Tamano",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pagina_MunicipioOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Buscar municipios con cobertura",
+        "tags": [
+          "Cobertura"
+        ]
+      }
+    },
+    "/api/v1/cobertura/municipios/{codigo_dane}": {
+      "get": {
+        "operationId": "ficha_municipio_api_v1_cobertura_municipios__codigo_dane__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "codigo_dane",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{5}$",
+              "title": "Codigo Dane",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MunicipioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Ficha de cobertura de un municipio",
+        "tags": [
+          "Cobertura"
+        ]
+      }
+    },
+    "/api/v1/cotizaciones/{cotizacion_id}": {
+      "get": {
+        "description": "Visible para quien la creó (usuario autenticado) o para asesores/administradores.\nLas cotizaciones de invitados se consultan solo por quien conoce su id (UUID aleatorio).",
+        "operationId": "obtener_cotizacion_api_v1_cotizaciones__cotizacion_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cotizacion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Cotizacion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CotizacionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Consultar una cotización",
+        "tags": [
+          "Cotización"
+        ]
+      }
+    },
+    "/api/v1/cotizar": {
+      "post": {
+        "description": "Cálculo determinista: peso volumétrico = alto×ancho×largo/4000; se cobra el mayor entre real y volumétrico;\nseguro = máx(1 % del valor declarado, mínimo de la ruta); flete mínimo y recargos de la matriz (D-01..D-03).\nValida cobertura, peso máximo del destino, refrigeración disponible, 50 kg en paquetería y prohibidos.",
+        "operationId": "crear_cotizacion_api_v1_cotizar_post",
+        "parameters": [
+          {
+            "description": "Opcional: reintentos seguros",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opcional: reintentos seguros",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CotizacionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CotizacionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Conflicto"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cotizar un envío",
+        "tags": [
+          "Cotización"
+        ]
+      }
+    },
+    "/api/v1/mercancias/clases": {
+      "get": {
+        "operationId": "clases_api_v1_mercancias_clases_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClaseOnuOut"
+                  },
+                  "title": "Response Clases Api V1 Mercancias Clases Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Clases ONU y política de TransLogix",
+        "tags": [
+          "Mercancías"
+        ]
+      }
+    },
+    "/api/v1/mercancias/consultar": {
+      "get": {
+        "description": "Veredicto determinista (permitido, restringido, solo_ftl, prohibido o desconocido) con la sección del manual\nque lo fundamenta y los documentos exigidos (MSDS de 16 secciones, tarjeta NTC 4532, RNDC).",
+        "operationId": "consultar_api_v1_mercancias_consultar_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "producto",
+            "required": true,
+            "schema": {
+              "examples": [
+                "ácido clorhídrico"
+              ],
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Producto",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VeredictoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "¿Se puede enviar este producto?",
+        "tags": [
+          "Mercancías"
+        ]
+      }
+    },
+    "/api/v1/pqrs/crear-ticket": {
+      "post": {
+        "description": "Valida el plazo legal en días hábiles (avería aparente: al recibir; oculta: 3 días hábiles; pérdida: 5+10),\narma el checklist documental del protocolo y fija la fecha límite de respuesta (15 días hábiles).\nReclamaciones de más de $5.000.000 o con carga especial se marcan como escaladas (CRIT-003/CRIT-005).",
+        "operationId": "crear_ticket_api_v1_pqrs_crear_ticket_post",
+        "parameters": [
+          {
+            "description": "Recomendado: evita radicados duplicados",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Recomendado: evita radicados duplicados",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Prohibido"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Conflicto"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Radicar una PQRS o solicitud de indemnización",
+        "tags": [
+          "PQRS"
+        ]
+      }
+    },
+    "/api/v1/pqrs/liquidacion-estimada": {
+      "post": {
+        "description": "mín(valor declarado, factura) − deducible del 5 % si el declarado supera $2.000.000 (+ flete si aplica).",
+        "operationId": "liquidacion_api_v1_pqrs_liquidacion_estimada_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiquidacionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiquidacionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Estimar el monto a indemnizar",
+        "tags": [
+          "PQRS"
+        ]
+      }
+    },
+    "/api/v1/pqrs/plazo": {
+      "get": {
+        "operationId": "consultar_plazo_api_v1_pqrs_plazo_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "guia",
+            "required": true,
+            "schema": {
+              "pattern": "^TLX-[0-9]{6}-CO$",
+              "title": "Guia",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo_averia",
+            "required": true,
+            "schema": {
+              "enum": [
+                "aparente",
+                "oculta",
+                "perdida"
+              ],
+              "title": "Tipo Averia",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "anotada_en_guia",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Anotada En Guia",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlazoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "¿Estoy a tiempo de reclamar?",
+        "tags": [
+          "PQRS"
+        ]
+      }
+    },
+    "/api/v1/pqrs/{radicado}": {
+      "get": {
+        "operationId": "ver_ticket_api_v1_pqrs__radicado__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "radicado",
+            "required": true,
+            "schema": {
+              "examples": [
+                "PQRS-2026-000001"
+              ],
+              "pattern": "^PQRS-\\d{4}-\\d{6}$",
+              "title": "Radicado",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Consultar un radicado",
+        "tags": [
+          "PQRS"
+        ]
+      }
+    },
+    "/api/v1/pqrs/{radicado}/documentos": {
+      "post": {
+        "operationId": "adjuntar_api_v1_pqrs__radicado__documentos_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "radicado",
+            "required": true,
+            "schema": {
+              "examples": [
+                "PQRS-2026-000001"
+              ],
+              "pattern": "^PQRS-\\d{4}-\\d{6}$",
+              "title": "Radicado",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_adjuntar_api_v1_pqrs__radicado__documentos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Conflicto"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Archivo demasiado grande"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Tipo de contenido no soportado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Adjuntar un soporte (PDF, JPG o PNG, máx. 10 MB)",
+        "tags": [
+          "PQRS"
+        ]
+      }
+    },
+    "/api/v1/tracking/{guia}": {
+      "get": {
+        "description": "Público (invitado): estado, eventos (con datos personales enmascarados), ubicación y ETA.\nEl titular de la cuenta, asesores y administradores reciben además `detalle`.",
+        "operationId": "rastrear_api_v1_tracking__guia__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "guia",
+            "required": true,
+            "schema": {
+              "examples": [
+                "TLX-984021-CO"
+              ],
+              "maxLength": 20,
+              "minLength": 10,
+              "title": "Guia",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Demasiadas solicitudes"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Estado y línea de tiempo de una guía",
+        "tags": [
+          "Rastreo"
+        ]
+      }
+    },
+    "/api/v1/trayectos/destinos": {
+      "get": {
+        "operationId": "destinos_api_v1_trayectos_destinos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "origen",
+            "required": true,
+            "schema": {
+              "examples": [
+                "Bogotá D.C."
+              ],
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Origen",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OpcionCiudad"
+                  },
+                  "title": "Response Destinos Api V1 Trayectos Destinos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Destinos disponibles desde un origen",
+        "tags": [
+          "Cobertura"
+        ]
+      }
+    },
+    "/api/v1/trayectos/origenes": {
+      "get": {
+        "description": "Opciones para el campo `origen` del formulario de cotización.",
+        "operationId": "origenes_api_v1_trayectos_origenes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OpcionCiudad"
+                  },
+                  "title": "Response Origenes Api V1 Trayectos Origenes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "summary": "Ciudades de origen disponibles",
+        "tags": [
+          "Cobertura"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Responde 200 si el proceso está vivo. No consulta dependencias.",
+        "operationId": "vivo_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Vivo Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness",
+        "tags": [
+          "Salud"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "200 si BD, LLM local y embeddings responden; 503 (estado `degradado`) si alguno falla.",
+        "operationId": "listo_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoSalud"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoSalud"
+                }
+              }
+            },
+            "description": "Algún componente no responde"
+          }
+        },
+        "summary": "Readiness con estado de BD, LLM y embeddings",
+        "tags": [
+          "Salud"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Local",
+      "url": "http://127.0.0.1:8100"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Registro, login, rotación de refresh tokens y perfil.",
+      "name": "Autenticación"
+    },
+    {
+      "description": "Conversación con el agente (SSE o JSON) y artifacts de UI.",
+      "name": "Chat"
+    },
+    {
+      "description": "Estado y trazabilidad de guías (`TLX-XXXXXX-CO`).",
+      "name": "Rastreo"
+    },
+    {
+      "description": "Cálculo determinista de fletes según la matriz tarifaria.",
+      "name": "Cotización"
+    },
+    {
+      "description": "Municipios, hubs y trayectos disponibles.",
+      "name": "Cobertura"
+    },
+    {
+      "description": "Mercancías peligrosas, prohibidas y requisitos (manual DOC-OPS-2026-03).",
+      "name": "Mercancías"
+    },
+    {
+      "description": "Peticiones, quejas, reclamos e indemnizaciones (DOC-PQRS-2026-04).",
+      "name": "PQRS"
+    },
+    {
+      "description": "Cola de escalamientos y atención humana (human-in-the-loop).",
+      "name": "Asesor"
+    },
+    {
+      "description": "Usuarios, métricas, conversaciones, base de conocimiento y chat administrativo.",
+      "name": "Administración"
+    },
+    {
+      "description": "Modelos que se autoentrenan: riesgo de retraso y demanda.",
+      "name": "Predicciones IA"
+    },
+    {
+      "description": "Liveness y readiness.",
+      "name": "Salud"
+    }
+  ]
+}

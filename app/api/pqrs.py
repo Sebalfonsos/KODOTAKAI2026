@@ -42,7 +42,7 @@ async def crear_ticket(
         return JSONResponse(previo, status_code=201)
     out = await svc.crear_ticket(s, datos, actor, reglas_escalamiento())
     idempotencia.guardar(s, idempotency_key, "pqrs", actor.sujeto, datos, 201, out)
-    await s.commit()
+    await idempotencia.confirmar(s)
     return out
 
 

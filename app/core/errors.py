@@ -109,7 +109,8 @@ def registrar(app: FastAPI) -> None:
             detalle = (
                 "La ruta solicitada no existe." if exc.status_code == 404 else "Método no permitido para esta ruta."
             )
-        return problema(request, exc.status_code, detalle, None, None, getattr(exc, "headers", None))
+        codigo = {404: "RUTA_NO_ENCONTRADA", 405: "METODO_NO_PERMITIDO"}.get(exc.status_code)
+        return problema(request, exc.status_code, detalle, codigo, None, getattr(exc, "headers", None))
 
     @app.exception_handler(Exception)
     async def _inesperado(request: Request, exc: Exception):
@@ -121,4 +122,5 @@ def registrar(app: FastAPI) -> None:
 
 # Respuestas de error reutilizables para documentar endpoints en OpenAPI.
 def respuestas(*codigos: int) -> dict:
+    codigos = (*codigos, 500)  # cualquier ruta puede responder 500 con problem+json
     return {c: {"model": Problema, "content": {PROBLEM: {}}, "description": TITULOS.get(c, "Error")} for c in codigos}

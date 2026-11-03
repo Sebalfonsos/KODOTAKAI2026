@@ -1,6 +1,7 @@
 """Cotización de fletes (ruta literal del dosier: POST /api/v1/cotizar)."""
 
 import uuid
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, status
@@ -41,7 +42,7 @@ async def crear_cotizacion(
         return JSONResponse(previo, status_code=201)
     out = await cotizar_y_guardar(s, datos, actor)
     idempotencia.guardar(s, idempotency_key, "cotizar", actor.sujeto, datos, 201, out)
-    await s.commit()
+    await idempotencia.confirmar(s)
     return out
 
 
@@ -67,7 +68,7 @@ async def obtener_cotizacion(cotizacion_id: uuid.UUID, actor: ActorOpcional, s: 
         origen=t["origen"],
         destino=t["destino"],
         desglose=DesgloseOut(**c.desglose),
-        total=c.total,
+        total=c.total.quantize(Decimal(1)),  # numeric(14,2) en BD; el total siempre es en pesos enteros
         tiempo_estimado_horas=c.desglose.get("tiempo_estimado_horas", 0),
         observaciones=c.desglose.get("observaciones", []),
         version_reglas=c.version_reglas,

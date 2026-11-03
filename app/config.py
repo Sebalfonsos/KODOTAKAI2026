@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     database_url: str
     test_database_url: str | None = None
+    apitest_database_url: str | None = None
 
     llm_base_url: str = "http://127.0.0.1:8000/v1"
     llm_api_key_file: Path | None = None

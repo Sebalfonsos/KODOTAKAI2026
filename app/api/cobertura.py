@@ -80,7 +80,12 @@ async def ficha_municipio(
     return _salida(m)
 
 
-@router.get("/trayectos/origenes", response_model=list[OpcionCiudad], summary="Ciudades de origen disponibles")
+@router.get(
+    "/trayectos/origenes",
+    response_model=list[OpcionCiudad],
+    summary="Ciudades de origen disponibles",
+    responses=respuestas(),
+)
 async def origenes(s: AsyncSession = Depends(get_session)):
     """Opciones para el campo `origen` del formulario de cotización."""
     filas = (

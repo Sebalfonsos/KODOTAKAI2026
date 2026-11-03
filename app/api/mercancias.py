@@ -41,7 +41,9 @@ async def consultar(producto: Annotated[str, Query(min_length=2, max_length=200,
     )
 
 
-@router.get("/clases", response_model=list[ClaseOnuOut], summary="Clases ONU y política de TransLogix")
+@router.get(
+    "/clases", response_model=list[ClaseOnuOut], summary="Clases ONU y política de TransLogix", responses=respuestas()
+)
 async def clases(s: AsyncSession = Depends(get_session)):
     filas = (await s.scalars(select(ClaseOnu).order_by(ClaseOnu.codigo))).all()
     return [

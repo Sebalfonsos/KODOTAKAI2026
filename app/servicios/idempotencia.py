@@ -4,6 +4,7 @@ import hashlib
 import json
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ApiError
@@ -40,3 +41,16 @@ def guardar(s: AsyncSession, clave: str | None, endpoint: str, sujeto: str, cuer
                 respuesta=jsonable_encoder(respuesta),
             )
         )
+
+
+async def confirmar(s: AsyncSession) -> None:
+    """Commit que convierte la carrera de dos peticiones simultáneas con la misma clave en 409 (no 500)."""
+    try:
+        await s.commit()
+    except IntegrityError as e:
+        await s.rollback()
+        raise ApiError(
+            409,
+            "Hay otra solicitud en curso con esta Idempotency-Key; reintenta en un momento.",
+            "IDEMPOTENCY_KEY_EN_USO",
+        ) from e
