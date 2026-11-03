@@ -21,12 +21,13 @@ dependencies = [
 ]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py313"
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC"]
-ignore = ["S101"]
+ignore = ["S101", "B008"]  # B008: Depends() en argumentos es el idioma de FastAPI
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

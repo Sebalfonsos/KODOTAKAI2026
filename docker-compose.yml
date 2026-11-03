@@ -1,0 +1,23 @@
+# PostgreSQL 17 + pgvector solo para este proyecto (el 5432 lo usa otro contenedor del equipo).
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: translogix-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-translogix}
+      POSTGRES_USER: ${POSTGRES_USER:-translogix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - translogix-pg:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  translogix-pg:
