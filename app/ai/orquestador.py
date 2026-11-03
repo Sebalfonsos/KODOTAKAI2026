@@ -414,10 +414,10 @@ async def ejecutar(e: Entrada) -> AsyncIterator[BaseModel]:
             )
 
 
-async def agregar(e: Entrada) -> C.ChatTurnResponse:
-    """Versión no-stream: consume los eventos y arma una respuesta JSON única."""
+async def agregar(eventos: AsyncIterator[BaseModel]) -> C.ChatTurnResponse:
+    """Versión no-stream: consume los eventos de un turno y arma una respuesta JSON única."""
     datos = {"artifacts": [], "texto": "", "reemplazado": False, "citas": [], "escalamiento": None}
-    async for ev in ejecutar(e):
+    async for ev in eventos:
         match ev:
             case C.EventoMeta():
                 datos |= {"turno_id": ev.turno_id, "sesion_id": ev.sesion_id, "intencion": ev.intencion}
@@ -436,3 +436,85 @@ async def agregar(e: Entrada) -> C.ChatTurnResponse:
             case C.EventoError():
                 raise ApiError(ev.status, ev.detail or "Error", ev.codigo)
     return C.ChatTurnResponse(**datos)
+
+
+async def ejecutar_admin(sesion_id: uuid.UUID, actor: Actor, pregunta: str) -> AsyncIterator[BaseModel]:
+    """Turno del chat administrativo: herramienta en lista blanca → artifacts → resumen del LLM verificado."""
+    from app.ai import herramientas_admin as HA
+    from app.ai.prompts import SISTEMA_ADMIN
+
+    inicio, lat, turno = time.perf_counter(), {}, uuid.uuid4()
+    async with SessionLocal() as s:
+        sesion = await s.get(SesionChat, sesion_id)
+        s.add(
+            Mensaje(sesion_id=sesion.id, turno_id=turno, rol=RolMensaje.USUARIO, autor_id=actor.id, contenido=pregunta)
+        )
+        try:
+            t0 = time.perf_counter()
+            intencion = await HA.clasificar(get_llm(), pregunta)
+            lat["router"] = _ms(t0)
+            yield C.EventoMeta(turno_id=str(turno), sesion_id=str(sesion.id), intencion=intencion)
+            t0 = time.perf_counter()
+            res = await HA.ejecutar(s, intencion, pregunta)
+            lat["tool"] = _ms(t0)
+            for a in res.artifacts:
+                yield C.EventoArtifact(artifact=a)
+            verificado = None
+            if res.texto:
+                texto = res.texto
+                yield C.EventoDelta(texto=texto)
+            else:
+                t0 = time.perf_counter()
+                partes: list[str] = []
+                try:
+                    async for delta in get_llm().stream(
+                        [
+                            {"role": "system", "content": SISTEMA_ADMIN},
+                            {"role": "user", "content": f"DATOS:\n{res.datos}\n\nPREGUNTA:\n{pregunta}"},
+                        ]
+                    ):
+                        if not partes:
+                            lat["llm_first_token"] = _ms(t0)
+                        partes.append(delta)
+                        yield C.EventoDelta(texto=delta)
+                except ApiError:
+                    partes = []
+                lat["llm_total"] = _ms(t0)
+                texto = "".join(partes).strip()
+                v = verificar(texto, f"{res.datos}\n{pregunta}") if texto else None
+                verificado = bool(v and v.ok)
+                if not verificado:
+                    texto = f"Datos: {res.datos[:600]}"
+                    yield C.EventoReemplazo(texto=texto, motivo=v.motivo if v else "sin_respuesta_llm")
+            lat["total"] = _ms(inicio)
+            s.add(
+                Mensaje(
+                    sesion_id=sesion.id,
+                    turno_id=turno,
+                    rol=RolMensaje.ASISTENTE,
+                    contenido=texto,
+                    artifacts=[a.model_dump(mode="json") for a in res.artifacts],
+                    intencion=f"admin:{intencion}",
+                    confianza=1,
+                    latencias_ms=lat,
+                    verificado=verificado,
+                )
+            )
+            sesion.ultima_actividad = datetime.now(UTC)
+            await s.commit()
+            yield C.EventoFin(turno_id=str(turno), confianza=1.0, latencias_ms=C.Latencias(**lat))
+        except ApiError as err:
+            await s.rollback()
+            yield C.EventoError(
+                type="about:blank", title="Error", status=err.status, detail=err.detail, codigo=err.codigo
+            )
+        except Exception:
+            await s.rollback()
+            log.exception("turno_admin_fallido")
+            yield C.EventoError(
+                type="about:blank",
+                title="Error interno",
+                status=500,
+                detail="No pudimos completar la consulta.",
+                codigo="ERROR_INTERNO",
+            )

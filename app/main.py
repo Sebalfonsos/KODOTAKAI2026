@@ -81,6 +81,9 @@ def crear_app() -> FastAPI:
     app.include_router(health.router)
     for router in _routers_v1():
         app.include_router(router, prefix="/api/v1")
+    from app.api.chat import router_admin
+
+    app.include_router(router_admin, prefix="/api/v1")
 
     demo = Path(__file__).parent / "static" / "demo.html"
     if s.demo_enabled and demo.exists():

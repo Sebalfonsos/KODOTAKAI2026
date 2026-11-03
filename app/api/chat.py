@@ -14,10 +14,10 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.eventos import suscribir
-from app.ai.orquestador import Entrada, agregar, ejecutar, formulario_guardado
+from app.ai.orquestador import Entrada, agregar, ejecutar, ejecutar_admin, formulario_guardado
 from app.core.errors import ApiError, respuestas
 from app.core.ratelimit import limite
-from app.core.security import Actor, ActorOpcional
+from app.core.security import Actor, ActorOpcional, SoloAdmin
 from app.db import get_session
 from app.domain.sanitizar import limpiar_texto
 from app.models import Calificacion, Mensaje, SesionChat
@@ -163,7 +163,7 @@ async def enviar(
         e = Entrada(sesion_id=sesion.id, actor=actor, formulario=formulario.tipo, valores=valores)
     await s.close()  # el turno usa su propia conexión; esta se libera ya
     if not stream:
-        return await agregar(e)
+        return await agregar(ejecutar(e))
 
     async def cuerpo():
         async for evento in ejecutar(e):
@@ -219,3 +219,59 @@ async def calificar(
         )
     )
     await s.commit()
+
+
+router_admin = APIRouter(prefix="/admin", tags=["Administración"])
+
+
+class PreguntaAdmin(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [{"texto": "¿Qué envíos están retenidos?"}, {"texto": "riesgo de TLX-984021-CO"}]
+        },
+    )
+    texto: str = Field(min_length=2, max_length=1000)
+    sesion_id: uuid.UUID | None = Field(default=None, description="Para continuar una conversación administrativa")
+
+
+@router_admin.post(
+    "/chat",
+    summary="Chat administrativo (KPIs, escalamientos, envíos, PQRS, predicciones)",
+    response_model=ChatTurnResponse,
+    responses={
+        200: {
+            "description": "SSE (por defecto) o JSON con ?stream=false",
+            "content": {SSE: {"schema": {"type": "string"}}},
+        },
+        **respuestas(401, 403, 404, 422, 429),
+    },
+    dependencies=[Depends(limite("admin_chat", 30, 60))],
+)
+async def chat_admin(
+    datos: PreguntaAdmin,
+    actor: SoloAdmin,
+    s: AsyncSession = Depends(get_session),
+    stream: Annotated[bool, Query(description="false = respuesta JSON única")] = True,
+):
+    """Mismo protocolo que el chat de clientes. Las consultas son herramientas fijas en lista blanca (sin texto-a-SQL);
+    el modelo solo clasifica la pregunta y resume cifras que el verificador contrasta con los datos."""
+    if datos.sesion_id:
+        sesion = await sesion_propia(s, datos.sesion_id, actor)
+        if sesion.canal != Canal.ADMIN:
+            raise ApiError(404, "No encontramos esa conversación administrativa.", "SESION_NO_ENCONTRADA")
+    else:
+        sesion = SesionChat(usuario_id=actor.id, canal=Canal.ADMIN, contexto={})
+        s.add(sesion)
+        await s.commit()
+    sesion_id = sesion.id
+    await s.close()
+    texto = limpiar_texto(datos.texto, max_len=1000)
+    if not stream:
+        return await agregar(ejecutar_admin(sesion_id, actor, texto))
+
+    async def cuerpo():
+        async for evento in ejecutar_admin(sesion_id, actor, texto):
+            yield formatear_sse(evento)
+
+    return StreamingResponse(cuerpo(), media_type=SSE, headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

@@ -29,6 +29,9 @@ extend-exclude = ["alembic/versions"]
 select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC"]
 ignore = ["S101", "B008"]  # B008: Depends() en argumentos es el idioma de FastAPI
 
+[tool.ruff.lint.per-file-ignores]
+"app/ai/herramientas_admin.py" = ["E501"]  # consultas SQL legibles en una línea
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
