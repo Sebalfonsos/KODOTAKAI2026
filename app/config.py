@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://127.0.0.1:8000/v1"
     llm_api_key_file: Path | None = None
     llm_timeout_s: float = 30.0
-    llm_max_tokens: int = 220
+    llm_max_tokens: int = 120  # ~3 frases: acota la latencia total de la respuesta
 
     ollama_url: str = "http://127.0.0.1:11434"
     embed_model: str = "bge-m3"

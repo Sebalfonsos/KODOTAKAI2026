@@ -375,11 +375,13 @@ async def main(con_rag: bool = True, historial_meses: int = 0) -> None:
 
         async with SessionLocal() as s:
             log.info("historial simulado: %s", await sembrar_historial(s, historial_meses))
+            await s.commit()
     if con_rag:
         from app.ai import rag
 
         async with SessionLocal() as s:
             log.info("corpus RAG: %s", await rag.ingestar_corpus(s, datos))
+            await s.commit()
 
 
 if __name__ == "__main__":
