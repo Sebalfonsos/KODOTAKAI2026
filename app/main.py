@@ -43,6 +43,7 @@ TAGS = [
         "name": "Administración",
         "description": "Usuarios, métricas, conversaciones, base de conocimiento y chat administrativo.",
     },
+    {"name": "Voz", "description": "Voz a texto (STT) y texto a voz (TTS) locales; el texto va al mismo chat."},
     {"name": "Predicciones IA", "description": "Modelos que se autoentrenan: riesgo de retraso y demanda."},
     {"name": "Salud", "description": "Liveness y readiness."},
 ]
@@ -100,7 +101,7 @@ def _routers_v1():
     import importlib
 
     for nombre in (
-        "auth", "chat", "tracking", "cotizar", "cobertura", "mercancias", "pqrs", "asesor", "admin", "ml",
+        "auth", "chat", "tracking", "cotizar", "cobertura", "mercancias", "pqrs", "asesor", "admin", "ml", "voz",
     ):  # fmt: skip
         try:
             yield importlib.import_module(f"app.api.{nombre}").router

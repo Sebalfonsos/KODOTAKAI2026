@@ -58,6 +58,8 @@
   </form>
   <span id="quien" class="meta">Invitado</span>
   <label class="meta"><input type="checkbox" id="admin"> Chat admin</label>
+  <label class="meta"><input type="checkbox" id="leer"> 🔊 Leer respuestas</label>
+  <select id="voz" aria-label="Voz de lectura" class="meta"><option value="female">Voz femenina</option><option value="male">Voz masculina</option></select>
 </header>
 <main>
   <div id="chat" aria-live="polite"></div>
@@ -67,6 +69,7 @@
     <label for="texto" class="sr">Mensaje</label>
     <input id="texto" maxlength="2000" placeholder="Escribe: quiero cotizar · TLX-984021-CO · ¿puedo enviar un perro?" autocomplete="off" required>
     <button>Enviar</button>
+    <button type="button" id="mic" class="secundario" aria-pressed="false" title="Hablar: pulsa para grabar y otra vez para enviar">🎙️</button>
   </form>
 </footer>
 <script>
@@ -151,6 +154,7 @@ async function enviar(cuerpo, endpoint, etiquetaUsuario) {
   } catch (p) {
     errorEn(arts, p);
   } finally { turno.removeAttribute("aria-busy"); ocupado = false; turno.scrollIntoView({ block: "end" }); }
+  if ($("#leer").checked && texto.textContent) leer(texto.textContent);
 }
 
 function errorEn(cont, p) {
@@ -359,6 +363,47 @@ $("#enviar").addEventListener("submit", ev => {
   const t = $("#texto").value.trim(); if (!t) return;
   $("#texto").value = "";
   enviar({ tipo: "texto", texto: t }, null, t);
+});
+// --- voz: micrófono -> /voz/transcribir -> chat ; respuesta -> /voz/sintetizar -------------------
+let grabadora = null, audioActual = null, lecturaId = 0;
+async function leer(t) {
+  const id = ++lecturaId;  // una lectura nueva cancela la anterior
+  // ponytail: frases por puntuación, sin cuidar abreviaturas; B sintetiza una a la vez, por eso van en orden.
+  for (const frase of t.match(/[^.!?…]+[.!?…]*/g) || []) {
+    if (id !== lecturaId || !frase.trim()) continue;
+    const r = await fetch(`${API}/voz/sintetizar`, { method: "POST", headers: cabeceras({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ texto: frase.trim(), voz: $("#voz").value }) });
+    if (!r.ok) { chat.append(el("p", { class: "err", role: "alert" }, "Voz no disponible, respuesta solo en texto.")); return; }
+    if (id !== lecturaId) return;
+    audioActual = new Audio(URL.createObjectURL(await r.blob()));
+    await new Promise(fin => { audioActual.onended = audioActual.onerror = fin; audioActual.play().catch(fin); });
+  }
+}
+function callar() { lecturaId++; audioActual?.pause(); }
+$("#mic").addEventListener("click", async () => {
+  const b = $("#mic");
+  if (grabadora?.state === "recording") return grabadora.stop();
+  callar();  // si suena una respuesta y el usuario habla, se interrumpe
+  let flujo;
+  try { flujo = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { return chat.append(el("p", { class: "err", role: "alert" }, "No hay acceso al micrófono (abre la demo en http://localhost o 127.0.0.1).")); }
+  const trozos = [];
+  grabadora = new MediaRecorder(flujo);
+  grabadora.ondataavailable = e => trozos.push(e.data);
+  grabadora.onstop = async () => {
+    flujo.getTracks().forEach(t => t.stop());
+    b.textContent = "⏳"; b.setAttribute("aria-pressed", "false");
+    const fd = new FormData(); fd.append("audio", new Blob(trozos, { type: grabadora.mimeType }), "audio.webm");
+    try {
+      const r = await fetch(`${API}/voz/transcribir`, { method: "POST", headers: cabeceras(), body: fd });
+      if (!r.ok) throw await problema(r);
+      const { texto } = await r.json();
+      if (texto) enviar({ tipo: "texto", texto }, null, `🎙️ ${texto}`);
+      else chat.append(el("p", { class: "meta" }, "No se entendió el audio."));
+    } catch (p) { errorEn(chat, p); }
+    finally { b.textContent = "🎙️"; }
+  };
+  grabadora.start(); b.textContent = "⏹️"; b.setAttribute("aria-pressed", "true");
 });
 $("#admin").addEventListener("change", () => chat.append(el("p", { class: "meta" }, $("#admin").checked ? "Modo chat admin (requiere login de admin)." : "Modo chat de cliente.")));
 </script>

@@ -2,6 +2,7 @@
 
 import hashlib
 import secrets
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -12,6 +13,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 
 from app.config import get_settings
 from app.core.errors import ApiError
@@ -102,6 +104,31 @@ def _decodificar(token: str) -> dict:
     return datos
 
 
+# ponytail: caché por proceso de 30 s para no consultar la BD en cada petición; Redis si hay varias réplicas.
+_vigencia: dict[uuid.UUID, tuple[float, tuple[Rol, int | None] | None]] = {}
+
+
+async def _usuario_vigente(uid: uuid.UUID) -> tuple[Rol, int | None] | None:
+    ahora = time.monotonic()
+    if (c := _vigencia.get(uid)) and ahora - c[0] < 30:
+        return c[1]
+    from app.db import SessionLocal  # import tardío: evita el ciclo security -> db -> config
+    from app.models import Usuario
+
+    async with SessionLocal() as s:
+        fila = (
+            await s.execute(select(Usuario.rol, Usuario.cuenta_id, Usuario.activo).where(Usuario.id == uid))
+        ).first()
+    valor = (fila.rol, fila.cuenta_id) if fila and fila.activo else None
+    _vigencia[uid] = (ahora, valor)
+    return valor
+
+
+def olvidar_usuario(uid: uuid.UUID) -> None:
+    """Invalida la caché tras desactivar o cambiar el rol de un usuario."""
+    _vigencia.pop(uid, None)
+
+
 def ip_cliente(request: Request) -> str:
     # ponytail: la API solo escucha en loopback sin proxy; si se pone detrás de uno, leer X-Forwarded-For confiable.
     return request.client.host if request.client else "desconocida"
@@ -113,7 +140,12 @@ async def actor_opcional(
     if cred is None:
         return Actor(None, None, None, ip_cliente(request))
     datos = _decodificar(cred.credentials)
-    return Actor(uuid.UUID(datos["sub"]), Rol(datos["rol"]), datos.get("cta"), ip_cliente(request))
+    uid = uuid.UUID(datos["sub"])
+    vigente = await _usuario_vigente(uid)
+    if vigente is None:
+        raise ApiError(401, "Usuario inactivo o inexistente.", "USUARIO_INACTIVO", {"WWW-Authenticate": "Bearer"})
+    # El rol y la cuenta salen de la BD (no del token): un cambio de rol aplica en ≤ 30 s, sin esperar a que expire.
+    return Actor(uid, vigente[0], vigente[1], ip_cliente(request))
 
 
 async def actor_requerido(actor: Annotated[Actor, Depends(actor_opcional)]) -> Actor:

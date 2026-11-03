@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # ponytail: 0 = embeddings en CPU para no competir por VRAM con el clúster de voz.
     embed_num_gpu: int = 0
 
+    # Clúster de voz: STT en A (loopback) y TTS en B (solo acepta conexiones desde A).
+    stt_url: str = "http://127.0.0.1:8082"
+    tts_url: str = "http://10.0.0.2:8083"
+    voz_timeout_s: float = 60.0
+
     jwt_secret: SecretStr
     jwt_access_min: int = 15
     jwt_refresh_dias: int = 7

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai import rag
 from app.api.asesor import detalle_sesion
 from app.core.errors import ApiError, respuestas
-from app.core.security import SoloAdmin, hash_password
+from app.core.security import SoloAdmin, hash_password, olvidar_usuario
 from app.db import get_session
 from app.domain.pii import enmascarar_nombre
 from app.models import (
@@ -150,6 +150,7 @@ async def editar_usuario(
     auditar(s, actor, "usuario.editar", "usuario", str(u.id), **{k: str(v) for k, v in cambios.items()})
     await s.commit()
     await s.refresh(u)
+    olvidar_usuario(u.id)  # el cambio de rol o la desactivación aplican de inmediato
     return UsuarioAdminOut.model_validate(u)
 
 

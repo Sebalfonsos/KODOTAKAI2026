@@ -160,7 +160,7 @@ def _tabla(titulo: str, columnas: list[tuple[str, str, str]], filas: list[dict])
         titulo=titulo,
         columnas=[A.Columna(clave=c, etiqueta=e, tipo=t) for c, e, t in columnas],
         filas=filas,
-        paginacion=A.Paginacion(pagina=1, tamano=len(filas), total=len(filas)),
+        paginacion=A.Paginacion(pagina=1, tamano=max(len(filas), 1), total=len(filas)),
     )
 
 
@@ -286,18 +286,31 @@ async def rendimiento_ia(s: AsyncSession, dias: int = 7) -> ResultadoAdmin:
 
 async def ml(s: AsyncSession, intencion: str, pregunta: str) -> ResultadoAdmin:
     """Predicciones: delega en app.ml.servicio (modelos que se autoentrenan con datos simulados etiquetados)."""
+    from app.core.errors import ApiError
     from app.ml import servicio
 
-    if intencion == "riesgo_retraso":
-        guias = extraer_guias(pregunta)
-        if not guias:
-            return ResultadoAdmin(texto="Indica la guía (formato TLX-XXXXXX-CO) para calcular su riesgo de retraso.")
-        art = await servicio.artifact_prediccion(s, guias[0])
-    elif intencion == "pronostico_demanda":
-        art = await servicio.artifact_pronostico(s, pregunta)
-    else:
-        art = await servicio.artifact_metricas(s)
+    try:
+        if intencion == "riesgo_retraso":
+            guias = extraer_guias(pregunta)
+            if not guias:
+                return ResultadoAdmin(texto="Indica la guía (formato TLX-XXXXXX-CO) para calcular su riesgo de retraso.")
+            art = servicio.artifact_prediccion(await servicio.predecir_riesgo(s, guias[0]))
+        elif intencion == "pronostico_demanda":
+            art = servicio.artifact_pronostico(await servicio.pronosticar_demanda(s, _origen(pregunta)))
+        else:
+            historial = [m for m in (await servicio.listar_modelos(s))["historial"] if m["estado"] != "rechazado"]
+            if not historial:
+                return ResultadoAdmin(texto="Aún no hay modelos entrenados. Entrénalos con POST /admin/ml/entrenar.")
+            art = servicio.artifact_metricas(historial)
+    except ApiError as e:  # modelo sin entrenar, guía u origen inexistente: se explica en el chat
+        return ResultadoAdmin(texto=e.detail)
     return ResultadoAdmin([art], art.model_dump_json(exclude={"id", "acciones"})[:1500])
+
+
+def _origen(pregunta: str) -> str:
+    # ponytail: "de|para|en <Ciudad>" al final de la pregunta; sin ciudad, Bogotá (el origen con más despachos).
+    m = re.search(r"\b(?:de|desde|para|en)\s+([A-ZÁÉÍÓÚÑ][\wáéíóúñ. ]+?)\s*\??$", pregunta)
+    return m.group(1) if m and m.group(1).lower() != "demanda" else "Bogotá D.C."
 
 
 async def ejecutar(s: AsyncSession, intencion: str, pregunta: str) -> ResultadoAdmin:

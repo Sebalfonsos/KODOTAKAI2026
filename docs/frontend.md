@@ -235,6 +235,14 @@ event: escalamiento
 data: {"escalamiento_id":"b7c1d2e3-4f50-4a6b-8c7d-9e0f1a2b3c4d","criterio":"CRIT-002","prioridad":"alta","mensaje":"Lamento profundamente la molestia ocasionada. Estoy transfiriendo tu chat de inmediato a un supervisor de servicio al cliente para resolver tu situación.","espera_estimada_s":45}
 ```
 
+## 4.1 Voz (opcional)
+La voz no tiene un chat propio: el audio se convierte en texto y ese texto se envía al mismo chat de la sección 4.
+- `POST /api/v1/voz/transcribir`: multipart con el campo `audio` (wav, mp3, ogg o el webm/opus de `MediaRecorder`). Responde `{"texto": "..."}`; ese texto va a `POST /chat/sesiones/{id}/mensajes` como `{"tipo":"texto"}`.
+- `POST /api/v1/voz/sintetizar`: `{"texto": "frase", "voz": "female" | "male"}` → `audio/wav` (mono, 24 kHz).
+- Errores: `413` si el audio supera el tamaño máximo, `422` si el audio o el texto vienen vacíos, `503 VOZ_NO_DISPONIBLE` si el clúster de voz no responde y `504 VOZ_TIMEOUT` si tarda demasiado. Si falla la voz, muestra la respuesta solo en texto.
+- Envía solo audio con voz: con silencio o ruido, el STT inventa frases. Pide la síntesis frase por frase y en orden, porque el TTS genera una frase a la vez.
+- El micrófono exige un contexto seguro (`https` o `http://localhost`). La demo `/demo` trae un botón 🎙️ y la casilla «Leer respuestas».
+
 ## 5. Acciones de los artifacts
 
 Todos los artifacts tienen `id`, `tipo`, `version` (hoy `1`), `titulo` opcional y `acciones[]`:
