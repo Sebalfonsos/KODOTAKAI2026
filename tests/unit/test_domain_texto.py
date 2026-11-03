@@ -5,7 +5,7 @@ import logging
 import pytest
 
 from app.domain.estados import traducir_estado
-from app.domain.pii import enmascarar_digitos, enmascarar_texto
+from app.domain.pii import enmascarar_digitos, enmascarar_nombre, enmascarar_texto
 from app.domain.sanitizar import extraer_guias, limpiar_texto, normalizar_para_busqueda
 
 
@@ -82,3 +82,8 @@ def test_extraer_guias_tolerante(guias):
     assert extraer_guias(texto) == ["TLX-984021-CO", "TLX-551904-CO"]
     assert extraer_guias("TLX-984 021-CO") == ["TLX-984021-CO"]
     assert extraer_guias("sin guía") == []
+
+
+def test_enmascarar_nombre_solo_iniciales():
+    assert enmascarar_nombre("Ing. Roberto Bermúdez") == "I. R. B."
+    assert enmascarar_nombre("  Camila   Restrepo ") == "C. R."

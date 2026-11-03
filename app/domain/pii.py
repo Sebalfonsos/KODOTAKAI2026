@@ -4,6 +4,7 @@ API:
 - `enmascarar_digitos(valor, visibles=4) -> str`: cambia por `*` todos los dígitos menos los últimos
   `visibles`, conservando el formato ("C.C. 16.789.432" -> "C.C. **.**9.432").
 - `enmascarar_documento`, `enmascarar_telefono`, `enmascarar_nit`: alias semánticos de lo anterior.
+- `enmascarar_nombre(nombre) -> str`: solo iniciales ("Roberto Bermúdez" -> "R. B.").
 - `enmascarar_texto(texto) -> str`: busca teléfonos, NIT y cédulas dentro de texto libre
   ("Asignado a conductor X (Tel: 310-987-6543)") y los enmascara. No toca montos, fechas ni guías.
 """
@@ -22,6 +23,11 @@ def enmascarar_digitos(valor: str, visibles: int = 4) -> str:
         else:
             salida.append(c)
     return "".join(salida)
+
+
+def enmascarar_nombre(nombre: str) -> str:
+    """Solo iniciales: "Ing. Roberto Bermúdez" -> "I. R. B." (listados de administración)."""
+    return " ".join(f"{p[0]}." for p in nombre.split() if p[0].isalpha())
 
 
 enmascarar_documento = enmascarar_digitos
