@@ -157,6 +157,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/ml/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reglas y estado del autoentrenamiento
+         * @description Qué dispararía el próximo reentrenamiento: reglas configuradas y valores medidos ahora.
+         */
+        get: operations["estado_api_v1_admin_ml_estado_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/ml/modelos": {
         parameters: {
             query?: never;
@@ -455,6 +475,27 @@ export interface paths {
          * @description Mensajes completos (con artifacts), payload de transferencia y datos de la cuenta (VIP).
          */
         get: operations["ver_sesion_api_v1_asesor_sesiones__sesion_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/asesor/sesiones/{sesion_id}/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eventos en vivo de la sesión (SSE)
+         * @description El chat punto a punto del lado del asesor. Envía `: ping` cada 15 s. Lo publicado durante un corte no se
+         *     reenvía: al reconectar, consulta `GET /asesor/sesiones/{id}`.
+         */
+        get: operations["eventos_sesion_api_v1_asesor_sesiones__sesion_id__eventos_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1340,7 +1381,7 @@ export interface components {
              * Artifacts
              * @default []
              */
-            artifacts: (components["schemas"]["FormularioCotizacion"] | components["schemas"]["ResultadoCotizacion"] | components["schemas"]["FormularioGuia"] | components["schemas"]["LineaTiempoEnvio"] | components["schemas"]["MapaUbicacion"] | components["schemas"]["VeredictoMercancia"] | components["schemas"]["GuiaEmbalaje"] | components["schemas"]["FichaCobertura"] | components["schemas"]["FormularioPqrs"] | components["schemas"]["EstadoPlazo"] | components["schemas"]["ChecklistDocumentos"] | components["schemas"]["TicketPqrs"] | components["schemas"]["AvisoEscalamiento"] | components["schemas"]["Citas"] | components["schemas"]["RespuestasRapidas"] | components["schemas"]["Confirmacion"] | components["schemas"]["EncuestaSatisfaccion"] | components["schemas"]["TarjetasKpi"] | components["schemas"]["Grafico"] | components["schemas"]["TablaDatos"] | components["schemas"]["TarjetaPrediccion"] | components["schemas"]["MetricasModelo"] | components["schemas"]["ColaEscalamientos"])[];
+            artifacts: (components["schemas"]["FormularioCotizacion"] | components["schemas"]["ResultadoCotizacion"] | components["schemas"]["FormularioGuia"] | components["schemas"]["LineaTiempoEnvio"] | components["schemas"]["MapaUbicacion"] | components["schemas"]["VeredictoMercancia"] | components["schemas"]["PlanEnvio"] | components["schemas"]["GuiaEmbalaje"] | components["schemas"]["FichaCobertura"] | components["schemas"]["FormularioPqrs"] | components["schemas"]["EstadoPlazo"] | components["schemas"]["ChecklistDocumentos"] | components["schemas"]["TicketPqrs"] | components["schemas"]["AvisoEscalamiento"] | components["schemas"]["Citas"] | components["schemas"]["RespuestasRapidas"] | components["schemas"]["Confirmacion"] | components["schemas"]["EncuestaSatisfaccion"] | components["schemas"]["TarjetasKpi"] | components["schemas"]["Grafico"] | components["schemas"]["TablaDatos"] | components["schemas"]["TarjetaPrediccion"] | components["schemas"]["MetricasModelo"] | components["schemas"]["ColaEscalamientos"])[];
             /**
              * Citas
              * @default []
@@ -2196,6 +2237,60 @@ export interface components {
             sesion_id: string;
             /** Tomado En */
             tomado_en: string | null;
+        };
+        /**
+         * EstadoAutoentrenamientoOut
+         * @description Reglas vigentes (variables de entorno `ML_*`) y su medición actual. Las reglas no se editan por API.
+         */
+        EstadoAutoentrenamientoOut: {
+            /**
+             * Datos Simulados
+             * @default true
+             */
+            datos_simulados: boolean;
+            /**
+             * Delta Deriva
+             * @description Reentrena si Brier en vivo − Brier de entrenamiento lo supera
+             */
+            delta_deriva: number;
+            /** Error Entrenamiento */
+            error_entrenamiento: number | null;
+            /**
+             * Error Vivo
+             * @description Brier en vivo; requiere al menos 50 predicciones con desenlace
+             */
+            error_vivo: number | null;
+            /** Horas Desde Ultimo */
+            horas_desde_ultimo: number | null;
+            /**
+             * Max Horas
+             * @description `ML_MAX_HORAS`: reentrena si el último es más antiguo
+             * @example 24
+             */
+            max_horas: number;
+            /**
+             * Min Etiquetados
+             * @description Por debajo de este número no se puede entrenar
+             */
+            min_etiquetados: number;
+            /**
+             * Min Etiquetas Nuevas
+             * @description `ML_MIN_NUEVOS`: reentrena al llegar a este número
+             * @example 200
+             */
+            min_etiquetas_nuevas: number;
+            /** N Etiquetados */
+            n_etiquetados: number;
+            /** N Nuevos */
+            n_nuevos: number;
+            /** N Vivo */
+            n_vivo: number;
+            /**
+             * Revision Cada Min
+             * @description `ML_CHECK_MIN`
+             * @example 10
+             */
+            revision_cada_min: number;
         };
         /**
          * EstadoEscalamiento
@@ -3737,6 +3832,85 @@ export interface components {
             tamano: number;
             /** Total */
             total: number;
+        };
+        /** PasoPlan */
+        PasoPlan: {
+            /** Detalle */
+            detalle: string;
+            /**
+             * Items
+             * @default []
+             */
+            items: string[];
+            /** Titulo */
+            titulo: string;
+        };
+        /**
+         * PlanEnvio
+         * @description Lo que hay que saber y hacer para despachar un producto; va seguido del formulario de cotización.
+         * @example {
+         *       "estado": "sin_registro",
+         *       "fuentes": [
+         *         {
+         *           "doc_codigo": "DOC-OPS-2026-03",
+         *           "documento": "Manual de mercancías peligrosas y embalaje",
+         *           "seccion": "§4 Estándares de embalaje"
+         *         }
+         *       ],
+         *       "id": "art-plan-01",
+         *       "pasos": [
+         *         {
+         *           "detalle": "El remitente responde por un embalaje que resista vibración, frenado y apilamiento.",
+         *           "items": [],
+         *           "titulo": "Embala"
+         *         }
+         *       ],
+         *       "producto": "clavos",
+         *       "resumen": "No aparece en nuestro catálogo de prohibidos y mercancías peligrosas. No es una aprobación.",
+         *       "tipo": "plan_envio",
+         *       "titulo": "Plan para enviar clavos"
+         *     }
+         */
+        PlanEnvio: {
+            /**
+             * Acciones
+             * @default []
+             */
+            acciones: components["schemas"]["Accion"][];
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "permitido" | "restringido" | "solo_ftl" | "sin_registro" | "sin_producto";
+            /**
+             * Fuentes
+             * @default []
+             */
+            fuentes: components["schemas"]["Cita"][];
+            /**
+             * Id
+             * @description Único dentro de la sesión
+             */
+            id: string;
+            /** Pasos */
+            pasos: components["schemas"]["PasoPlan"][];
+            /** Producto */
+            producto?: string | null;
+            /** Resumen */
+            resumen: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            tipo: "plan_envio";
+            /** Titulo */
+            titulo?: string | null;
+            /**
+             * Version
+             * @default 1
+             * @constant
+             */
+            version: 1;
         };
         /** PlazoOut */
         PlazoOut: {
@@ -5665,6 +5839,56 @@ export interface operations {
             };
         };
     };
+    estado_api_v1_admin_ml_estado_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoAutoentrenamientoOut"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Prohibido */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Error interno */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     modelos_api_v1_admin_ml_modelos_get: {
         parameters: {
             query?: never;
@@ -6876,6 +7100,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SesionDetalleOut"];
+                };
+            };
+            /** @description No autenticado */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Prohibido */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description No encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Datos inválidos */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Error interno */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problema"];
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    eventos_sesion_api_v1_asesor_sesiones__sesion_id__eventos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sesion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Eventos `mensaje_cliente`, `mensaje_asesor` y `escalamiento_resuelto` */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/event-stream": unknown;
                 };
             };
             /** @description No autenticado */

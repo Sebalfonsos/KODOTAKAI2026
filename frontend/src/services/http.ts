@@ -19,6 +19,15 @@ export class ErrorApi extends Error {
 /** Sin respuesta del servidor: red caída, CORS o backend apagado. */
 export class ErrorRed extends Error {}
 
+/** Texto para mostrar de cualquier error de una petición. */
+export function mensajeError(e: unknown): string {
+  if (e instanceof ErrorApi) {
+    const campos = e.problema.errores?.map((x) => x.mensaje).join(" ");
+    return campos || (e.problema.detail ?? e.problema.title);
+  }
+  return e instanceof Error ? e.message : "Ocurrió un error inesperado.";
+}
+
 // Access token en memoria. El refresh rota en cada uso: se guarda siempre el último (docs/frontend.md §2).
 const CLAVE_REFRESH = "translogix.refresh";
 let accessToken: string | null = null;

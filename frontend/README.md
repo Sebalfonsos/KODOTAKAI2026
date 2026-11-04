@@ -18,6 +18,16 @@ Requiere el backend en marcha (ver `Makefile` en la raíz). Cambia el destino co
 1. Crea el componente en `src/features/artifacts/`.
 2. Reemplaza `Pendiente` por él en `registro.tsx`. Si el contrato añade un tipo, TypeScript exige registrarlo.
 
+## Modo agente
+
+Panel desplegable a la derecha (`src/features/agente/`), disponible en toda la app y con micrófono. Usa el mismo chat y la misma voz que los servicios (`hooks/useConversacion.ts`), en su propia sesión. Sus casos de estudio están en `casos.ts`; cada uno es un mensaje normal. No pinta a RUTI porque su SVG usa IDs globales y la página ya tiene uno.
+
+## Consolas de trabajo
+
+- **`/asesor`** (`src/features/asesor/`): cola de escalamientos, toma del caso y chat en vivo con el cliente. Para probarlo, usa una pestaña como cliente y otra como asesor: la sesión es por pestaña.
+- **`/admin`** (`src/features/admin/`): indicadores, predicciones de ML con autoentrenamiento y simulador, chat administrativo, usuarios, conversaciones, envíos, PQRS, base de conocimiento y auditoría.
+- Para que Predicciones tenga datos: `uv run python -m app.seed --historial-meses 12`. La API entrena los modelos sola al arrancar.
+
 ## Reglas
 
 - El servidor decide cifras, veredictos y escalamientos; el front solo los muestra.
