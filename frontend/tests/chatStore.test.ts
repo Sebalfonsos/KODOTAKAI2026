@@ -18,6 +18,8 @@ describe("chatReducer", () => {
       { evento: "reemplazo", data: { texto: "Está prohibido.", motivo: "polaridad_contradice_veredicto" } },
     );
     expect(turno(e).texto).toBe("Está prohibido.");
+    expect(turno(e).corregido).toBe(true);
+    expect(turno(e).intencion).toBe("rastrear");
   });
 
   it("el artifact se conserva en el turno abierto y `fin` lo cierra", () => {
@@ -26,6 +28,7 @@ describe("chatReducer", () => {
     const e = aplicar(inicio, meta, { evento: "artifact", data: { artifact } }, fin);
     expect(turno(e).artifacts).toHaveLength(1);
     expect(turno(e).completo).toBe(true);
+    expect(turno(e).latencias).toEqual({ total: 1 });
     expect(e.enCurso).toBe(false);
   });
 
