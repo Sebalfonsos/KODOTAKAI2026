@@ -17,7 +17,7 @@ export function AccionesArtifact({ artifact, contexto }: { artifact: Artifact; c
     }
   };
   return (
-    <div className="artifact__acciones">
+    <div className={`artifact__acciones${artifact.tipo === "respuestas_rapidas" ? " artifact__acciones--chips" : ""}`}>
       {acciones.map((a: Accion) => (
         <button
           key={a.id}

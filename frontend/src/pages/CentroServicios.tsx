@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { Ruti } from "../components/ruti/Ruti";
+import { Icono, type NombreIcono } from "../components/ui/Icono";
 
-const SERVICIOS = [
-  { a: "/consultar", titulo: "Consultar envío", texto: "Rastrea tu guía y mira en qué va." },
-  { a: "/cotizar", titulo: "Cotizar flete", texto: "Conoce el valor exacto con su desglose." },
-  { a: "/pqrs", titulo: "Gestionar reclamación", texto: "Radica tu caso con los documentos correctos." },
-  { a: "/ayuda", titulo: "Resolver dudas", texto: "Pregunta por mercancías, embalaje o cobertura." },
+export const SERVICIOS: { a: string; titulo: string; texto: string; cta: string; icono: NombreIcono }[] = [
+  { a: "/consultar", titulo: "Consultar envío", texto: "Rastrea tu guía y mira en qué va.", cta: "Rastrear", icono: "caja" },
+  { a: "/cotizar", titulo: "Cotizar flete", texto: "Conoce el valor con su desglose.", cta: "Cotizar", icono: "calculadora" },
+  { a: "/pqrs", titulo: "Gestionar reclamación", texto: "Radica tu caso con los documentos correctos.", cta: "Empezar", icono: "alerta" },
+  { a: "/ayuda", titulo: "Resolver dudas", texto: "Mercancías, embalaje, cobertura y tiempos.", cta: "Preguntar", icono: "chat" },
 ];
 
 export function CentroServicios() {
@@ -22,8 +23,14 @@ export function CentroServicios() {
         {SERVICIOS.map((s) => (
           <li key={s.a}>
             <Link to={s.a} className="tarjeta-servicio">
+              <span className="tarjeta-servicio__icono">
+                <Icono nombre={s.icono} tamano={26} />
+              </span>
               <strong>{s.titulo}</strong>
               <span>{s.texto}</span>
+              <span className="tarjeta-servicio__cta">
+                {s.cta} <Icono nombre="flecha" tamano={16} />
+              </span>
             </Link>
           </li>
         ))}

@@ -40,6 +40,12 @@
   html:not([data-movimiento="reducido"]) .ruti svg[data-state="escalamiento"] #pin_ubicacion { transform: rotate(4deg); }
 }
 
+/* Habla: la boca visible abre y cierra mientras suena el audio real de la respuesta. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-movimiento="reducido"]) .ruti[data-hablando] #boca { transform-box: fill-box; transform-origin: center; animation: ruti-habla .32s var(--ease-soft) infinite alternate; }
+}
+@keyframes ruti-habla { from { transform: scaleY(.7); } to { transform: scaleY(1.35); } }
+
 /* Cejas de escalamiento: distintas a las fruncidas de `error`. */
 .ruti svg[data-state="escalamiento"] #ceja_izquierda { transform-origin: 412px 432px; transform: rotate(-6deg); }
 .ruti svg[data-state="escalamiento"] #ceja_derecha { transform-origin: 671px 432px; transform: rotate(6deg); }

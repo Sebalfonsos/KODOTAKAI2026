@@ -24,3 +24,4 @@ Requiere el backend en marcha (ver `Makefile` en la raíz). Cambia el destino co
 - El estado de RUTI se deriva en `src/state/rutiMachine.ts`, nunca de un temporizador que simule progreso.
 - Solo una instancia del SVG de RUTI por página: usa IDs globales.
 - Si un stream se corta, no se reenvía el mensaje: se reconcilia con el historial.
+- Voz (`hooks/useVoz.ts`): el micrófono transcribe con `/voz/transcribir` y envía el texto al chat. RUTI lee en voz alta **un resumen** de cada respuesta (`state/resumenVoz.ts`), armado con los datos del artifact, no la respuesta completa. Si la voz falla, el chat sigue en texto.

@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { Icono } from "../ui/Icono";
 
 const ENLACES = [
   { a: "/servicios", texto: "Inicio" },
@@ -14,8 +15,12 @@ export function AppShell() {
   const { pathname } = useLocation();
   return (
     <div className="app" data-tema="claro">
+      <a href="#contenido" className="saltar">
+        Saltar al contenido
+      </a>
       <header className="cabecera">
         <Link to="/" className="marca">
+          <Icono nombre="caja" tamano={22} />
           TransLogix
         </Link>
         <nav aria-label="Principal">
@@ -47,7 +52,7 @@ export function AppShell() {
           </Link>
         )}
       </header>
-      <main id="contenido">
+      <main id="contenido" tabIndex={-1}>
         <Outlet />
       </main>
     </div>

@@ -1,8 +1,24 @@
 import type { ComponentType } from "react";
+import { Icono, type NombreIcono } from "../../components/ui/Icono";
 import type { Artifact, TipoArtifact } from "../../services/chat";
 import { AccionesArtifact, type ContextoArtifact } from "./AccionesArtifact";
 import { AvisoEscalamiento } from "./AvisoEscalamiento";
 import { Formulario } from "./Formulario";
+import {
+  ChecklistDocumentos,
+  CitasArtifact,
+  Confirmacion,
+  EncuestaSatisfaccion,
+  EstadoPlazo,
+  FichaCobertura,
+  GuiaEmbalaje,
+  LineaTiempoEnvio,
+  MapaUbicacion,
+  ResultadoCotizacion,
+  SoloAcciones,
+  TicketPqrs,
+  VeredictoMercancia,
+} from "./cliente";
 import { Pendiente } from "./Pendiente";
 
 export interface PropsArtifact<T extends TipoArtifact = TipoArtifact> {
@@ -21,20 +37,20 @@ const REGISTRO: { [T in TipoArtifact]: ComponentType<PropsArtifact<T>> } = {
   formulario_pqrs: Formulario,
   // Escalamiento.
   aviso_escalamiento: AvisoEscalamiento,
-  // Cliente: fase 4 a 8 del plan.
-  linea_tiempo_envio: Pendiente,
-  mapa_ubicacion: Pendiente,
-  resultado_cotizacion: Pendiente,
-  veredicto_mercancia: Pendiente,
-  guia_embalaje: Pendiente,
-  ficha_cobertura: Pendiente,
-  estado_plazo: Pendiente,
-  checklist_documentos: Pendiente,
-  ticket_pqrs: Pendiente,
-  citas: Pendiente,
-  respuestas_rapidas: Pendiente,
-  confirmacion: Pendiente,
-  encuesta_satisfaccion: Pendiente,
+  // Cliente.
+  linea_tiempo_envio: LineaTiempoEnvio,
+  mapa_ubicacion: MapaUbicacion,
+  resultado_cotizacion: ResultadoCotizacion,
+  veredicto_mercancia: VeredictoMercancia,
+  guia_embalaje: GuiaEmbalaje,
+  ficha_cobertura: FichaCobertura,
+  estado_plazo: EstadoPlazo,
+  checklist_documentos: ChecklistDocumentos,
+  ticket_pqrs: TicketPqrs,
+  citas: CitasArtifact,
+  respuestas_rapidas: SoloAcciones,
+  confirmacion: Confirmacion,
+  encuesta_satisfaccion: EncuestaSatisfaccion,
   // Administración: panel /admin.
   tarjetas_kpi: Pendiente,
   grafico: Pendiente,
@@ -52,12 +68,60 @@ export function ArtifactView({ artifact, contexto }: { artifact: Artifact; conte
     return null;
   }
   return (
-    <section className="artifact" aria-label={artifact.titulo ?? artifact.tipo} data-tipo={artifact.tipo}>
-      {artifact.titulo && <h2 className="artifact__titulo">{artifact.titulo}</h2>}
+    <section className="artifact" aria-label={artifact.titulo ?? NOMBRE[artifact.tipo] ?? "Respuesta"} data-tipo={artifact.tipo}>
+      {artifact.titulo && (
+        <h2 className="artifact__titulo">
+          {ICONO[artifact.tipo] && (
+            <span className="artifact__icono">
+              <Icono nombre={ICONO[artifact.tipo]!} tamano={18} />
+            </span>
+          )}
+          {artifact.titulo}
+        </h2>
+      )}
       <Componente artifact={artifact} contexto={contexto} />
-      {!esFormulario(artifact.tipo) && <AccionesArtifact artifact={artifact} contexto={contexto} />}
+      {!PROPIAS_ACCIONES.has(artifact.tipo) && <AccionesArtifact artifact={artifact} contexto={contexto} />}
     </section>
   );
 }
 
-const esFormulario = (t: TipoArtifact) => t.startsWith("formulario_");
+const ICONO: Partial<Record<TipoArtifact, NombreIcono>> = {
+  formulario_cotizacion: "calculadora",
+  formulario_guia: "codigo",
+  formulario_pqrs: "documento",
+  linea_tiempo_envio: "camion",
+  mapa_ubicacion: "pin",
+  resultado_cotizacion: "moneda",
+  veredicto_mercancia: "escudo",
+  guia_embalaje: "caja",
+  ficha_cobertura: "ruta",
+  estado_plazo: "reloj",
+  checklist_documentos: "documento",
+  ticket_pqrs: "check",
+  aviso_escalamiento: "asesor",
+  encuesta_satisfaccion: "estrella",
+};
+
+/** Nombre accesible cuando el servidor no envía `titulo`. */
+const NOMBRE: Partial<Record<TipoArtifact, string>> = {
+  linea_tiempo_envio: "Estado del envío",
+  mapa_ubicacion: "Última ubicación",
+  resultado_cotizacion: "Resultado de la cotización",
+  veredicto_mercancia: "Veredicto de la mercancía",
+  guia_embalaje: "Guía de embalaje",
+  ficha_cobertura: "Cobertura",
+  estado_plazo: "Plazo de la reclamación",
+  checklist_documentos: "Documentos requeridos",
+  ticket_pqrs: "Ticket de reclamación",
+  respuestas_rapidas: "Respuestas sugeridas",
+  encuesta_satisfaccion: "Encuesta de satisfacción",
+};
+
+/** Estos componentes pintan y ejecutan sus propias acciones (submit, carga de archivos, calificación). */
+const PROPIAS_ACCIONES = new Set<TipoArtifact>([
+  "formulario_cotizacion",
+  "formulario_guia",
+  "formulario_pqrs",
+  "checklist_documentos",
+  "encuesta_satisfaccion",
+]);

@@ -14,12 +14,14 @@ const FORMULARIOS = new Set(["formulario_cotizacion", "formulario_guia", "formul
 export interface SenalesRuti {
   chat: Pick<EstadoChat, "entradas" | "enCurso" | "fallo" | "escalamiento">;
   escribiendo: boolean;
+  /** El micrófono está grabando: actividad real de voz (barras de audio del kit). */
+  grabando?: boolean;
   /** `resuelto` dura poco: al vencer, RUTI vuelve a reposo. */
   resueltoVigente: boolean;
 }
 
 /** Función pura: el estado de RUTI se deriva de datos reales, nunca de un temporizador que simule progreso. */
-export function derivarRuti({ chat, escribiendo, resueltoVigente }: SenalesRuti): VistaRuti {
+export function derivarRuti({ chat, escribiendo, grabando, resueltoVigente }: SenalesRuti): VistaRuti {
   const { escalamiento } = chat;
   if (escalamiento && escalamiento.fase !== "resuelto") {
     return {
@@ -31,6 +33,7 @@ export function derivarRuti({ chat, escribiendo, resueltoVigente }: SenalesRuti)
           : "Estoy solicitando la ayuda de un asesor.",
     };
   }
+  if (grabando) return { estado: "escuchando", fase: null, mensaje: "Te escucho." };
   if (chat.fallo) return { estado: "error", fase: null, mensaje: chat.fallo.titulo };
   if (chat.enCurso) return { estado: "pensando", fase: null, mensaje: "Estoy consultando la información…" };
   if (resueltoVigente && turnoResuelto(chat)) {

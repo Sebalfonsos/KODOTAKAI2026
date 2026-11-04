@@ -9,31 +9,32 @@ import {
 import { ErrorApi, ErrorRed } from "../services/http";
 import { chatReducer, estadoInicial } from "../state/chatStore";
 
-const CLAVE_SESION = "translogix.sesion";
+/** Una sesión por servicio: cotizar, rastrear o PQRS no heredan la conversación de otro. */
+const claveSesion = (servicio: string) => `translogix.sesion.${servicio}`;
 
-function recordarSesion(id: string | null) {
+function recordarSesion(servicio: string, id: string | null) {
   try {
-    if (id) sessionStorage.setItem(CLAVE_SESION, id);
-    else sessionStorage.removeItem(CLAVE_SESION);
+    if (id) sessionStorage.setItem(claveSesion(servicio), id);
+    else sessionStorage.removeItem(claveSesion(servicio));
   } catch {
     // La conversación sigue funcionando; solo no se recupera al recargar.
   }
 }
 
-function sesionGuardada(): string | null {
+function sesionGuardada(servicio: string): string | null {
   try {
-    return sessionStorage.getItem(CLAVE_SESION);
+    return sessionStorage.getItem(claveSesion(servicio));
   } catch {
     return null;
   }
 }
 
-export function useChat() {
+export function useChat(servicio: string) {
   const [estado, despachar] = useReducer(chatReducer, estadoInicial);
   const sesionRef = useRef<string | null>(null);
   const pendiente = useRef<{ cuerpo: MensajeEntrada; ruta?: string } | null>(null);
   // La sesión guardada se recupera primero: un envío simultáneo quedaría pisado por el historial.
-  const [listo, setListo] = useState(() => sesionGuardada() === null);
+  const [listo, setListo] = useState(() => sesionGuardada(servicio) === null);
   const escalado = estado.escalamiento !== null && estado.escalamiento.fase !== "resuelto";
 
   const reconciliar = useCallback(async () => {
@@ -44,17 +45,17 @@ export function useChat() {
   }, []);
 
   useEffect(() => {
-    const guardada = sesionGuardada();
+    const guardada = sesionGuardada(servicio);
     if (!guardada) return;
     sesionRef.current = guardada;
     reconciliar()
       .catch(() => {
         // Sesión vencida o ajena: se empieza una nueva con el siguiente mensaje.
         sesionRef.current = null;
-        recordarSesion(null);
+        recordarSesion(servicio, null);
       })
       .finally(() => setListo(true));
-  }, [reconciliar]);
+  }, [reconciliar, servicio]);
 
   useEffect(() => {
     if (!escalado || !sesionRef.current) return;
@@ -74,7 +75,7 @@ export function useChat() {
         if (!sesionRef.current) {
           const sesion = await crearSesion();
           sesionRef.current = sesion.id;
-          recordarSesion(sesion.id);
+          recordarSesion(servicio, sesion.id);
           despachar({ tipo: "sesion", id: sesion.id });
         }
         await enviarMensaje(ruta ?? `/api/v1/chat/sesiones/${sesionRef.current}/mensajes`, cuerpo, (evento) => {
@@ -89,7 +90,7 @@ export function useChat() {
           // Conversación cerrada por inactividad o ajena tras cambiar de cuenta: el texto sigue en una nueva.
           if (codigo === "SESION_CERRADA" || codigo === "SESION_NO_ENCONTRADA") {
             sesionRef.current = null;
-            recordarSesion(null);
+            recordarSesion(servicio, null);
             if (cuerpo.tipo === "texto" && !reintento) return enviar(cuerpo, undefined, true);
             despachar({
               tipo: "fallo",
@@ -127,7 +128,7 @@ export function useChat() {
         });
       }
     },
-    [reconciliar],
+    [reconciliar, servicio],
   );
 
   const reintentar = useCallback(() => {
@@ -139,9 +140,9 @@ export function useChat() {
 
   const nueva = useCallback(() => {
     sesionRef.current = null;
-    recordarSesion(null);
+    recordarSesion(servicio, null);
     despachar({ tipo: "reiniciar" });
-  }, []);
+  }, [servicio]);
 
   return { estado, listo, enviar, reintentar, nueva };
 }

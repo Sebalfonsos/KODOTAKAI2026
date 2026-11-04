@@ -10,13 +10,15 @@ interface Props {
   vista: Pick<VistaRuti, "estado" | "fase">;
   encuadre?: Encuadre;
   className?: string;
+  /** Mueve la boca mientras suena el audio de la respuesta. */
+  hablando?: boolean;
 }
 
 /**
  * SVG inline para controlar sus grupos. Usa IDs globales (`ojos`, `teal`…): solo una instancia por página.
  * Es decorativo: el estado se anuncia con `RutiStatus`. El contenido es un archivo propio del repo, no datos externos.
  */
-export function Ruti({ vista, encuadre = "completo", className }: Props) {
+export function Ruti({ vista, encuadre = "completo", className, hablando }: Props) {
   const contenedor = useRef<HTMLDivElement>(null);
 
   // Antes de pintar: el SVG viene guardado en `escuchando` y mostraría sus barras un instante.
@@ -40,6 +42,7 @@ export function Ruti({ vista, encuadre = "completo", className }: Props) {
       ref={contenedor}
       className={`ruti ${className ?? ""}`}
       data-encuadre={encuadre}
+      data-hablando={hablando || undefined}
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

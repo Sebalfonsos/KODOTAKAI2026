@@ -3,9 +3,16 @@ import { loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const objetivo = loadEnv(mode, ".", "VITE_").VITE_API_TARGET ?? "http://127.0.0.1:8100";
+  // Solo en `npm run dev`: la cuenta demo sale del .env del backend (ignorado por Git). `npm run build` nunca la incluye.
+  const raiz = loadEnv(mode, "..", "DEMO_CLIENTE_");
+  const cuentaDemo =
+    command === "serve" && mode === "development" && raiz.DEMO_CLIENTE_EMAIL && raiz.DEMO_CLIENTE_PASSWORD
+      ? { email: raiz.DEMO_CLIENTE_EMAIL, password: raiz.DEMO_CLIENTE_PASSWORD }
+      : null;
   return {
+    define: { __CUENTA_DEMO__: JSON.stringify(cuentaDemo) },
     plugins: [
       react(),
       VitePWA({
