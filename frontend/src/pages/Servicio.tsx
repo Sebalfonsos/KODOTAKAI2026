@@ -11,10 +11,11 @@ interface Props {
   requiereSesion?: boolean;
   icono?: NombreIcono;
   descripcion?: string;
+  conAgente?: boolean;
 }
 
 /** Cada servicio arranca un flujo del chat: el servidor emite el formulario y evalúa el escalamiento. */
-export function Servicio({ inicio, titulo, pasos, requiereSesion, icono, descripcion }: Props) {
+export function Servicio({ inicio, titulo, pasos, requiereSesion, icono, descripcion, conAgente }: Props) {
   const { usuario } = useAuth();
   const { pathname } = useLocation();
   const aviso =
@@ -29,5 +30,5 @@ export function Servicio({ inicio, titulo, pasos, requiereSesion, icono, descrip
         </span>
       </p>
     ) : null;
-  return <Conversacion key={inicio ?? "ayuda"} inicio={inicio} titulo={titulo} pasos={pasos} aviso={aviso} icono={icono} descripcion={descripcion} />;
+  return <Conversacion key={inicio ?? "ayuda"} inicio={inicio} titulo={titulo} pasos={pasos} aviso={aviso} icono={icono} descripcion={descripcion} conAgente={conAgente} />;
 }

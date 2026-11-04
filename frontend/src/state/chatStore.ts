@@ -1,4 +1,4 @@
-import type { Artifact, Cita, EventoAsesor, EventoChat, Historial } from "../services/chat";
+import type { Artifact, Cita, EventoAsesor, EventoChat, Historial, Latencias } from "../services/chat";
 
 export interface TurnoAgente {
   rol: "agente";
@@ -10,6 +10,10 @@ export interface TurnoAgente {
   completo: boolean;
   /** Confirmación de que el mensaje llegó al asesor: no es una respuesta, no se pinta ni se lee en voz alta. */
   acuse?: boolean;
+  /** Lo que la bitácora del modo agente cuenta: intención, etapas que corrieron y si el verificador corrigió. */
+  intencion?: string;
+  latencias?: Latencias;
+  corregido?: boolean;
 }
 export interface MensajeSimple {
   rol: "usuario" | "asesor" | "sistema";
@@ -70,13 +74,13 @@ function enTurno(e: EstadoChat, cambio: (t: TurnoAgente) => TurnoAgente): Estado
 function aplicarEvento(e: EstadoChat, ev: EventoChat): EstadoChat {
   switch (ev.evento) {
     case "meta":
-      return { ...e, entradas: [...e.entradas, { ...turnoVacio(ev.data.turno_id), acuse: ev.data.intencion === "asesor_humano" }] };
+      return { ...e, entradas: [...e.entradas, { ...turnoVacio(ev.data.turno_id), intencion: ev.data.intencion, acuse: ev.data.intencion === "asesor_humano" }] };
     case "artifact":
       return enTurno(e, (t) => ({ ...t, artifacts: [...t.artifacts, ev.data.artifact] }));
     case "delta":
       return enTurno(e, (t) => ({ ...t, texto: t.texto + ev.data.texto }));
     case "reemplazo": // El verificador corrigió el texto: se sustituye todo lo emitido en el turno.
-      return enTurno(e, (t) => ({ ...t, texto: ev.data.texto }));
+      return enTurno(e, (t) => ({ ...t, texto: ev.data.texto, corregido: true }));
     case "citas":
       return enTurno(e, (t) => ({ ...t, citas: ev.data.citas }));
     case "escalamiento":
@@ -92,7 +96,7 @@ function aplicarEvento(e: EstadoChat, ev: EventoChat): EstadoChat {
         },
       };
     case "fin":
-      return { ...enTurno(e, (t) => ({ ...t, confianza: ev.data.confianza, completo: true })), enCurso: false };
+      return { ...enTurno(e, (t) => ({ ...t, confianza: ev.data.confianza, latencias: ev.data.latencias_ms, completo: true })), enCurso: false };
     case "error":
       return {
         ...enTurno(e, (t) => ({ ...t, completo: true })),
@@ -114,6 +118,7 @@ function desdeHistorial(e: EstadoChat, h: Historial): EstadoChat {
     else if (m.rol === "asistente") {
       entradas.push({
         ...turnoVacio(m.turno_id),
+        intencion: m.intencion ?? undefined,
         artifacts: m.artifacts as unknown as Artifact[],
         texto: m.contenido,
         confianza: m.confianza ?? null,

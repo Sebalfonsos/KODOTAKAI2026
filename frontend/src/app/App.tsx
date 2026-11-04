@@ -11,7 +11,6 @@ import { PqrsAdmin } from "../features/admin/PqrsAdmin";
 import { Predicciones } from "../features/admin/Predicciones";
 import { Resumen } from "../features/admin/Resumen";
 import { Usuarios } from "../features/admin/Usuarios";
-import { ModoAgente } from "../features/agente/ModoAgente";
 import { PanelAsesor } from "../features/asesor/PanelAsesor";
 import { AuthProvider } from "../hooks/useAuth";
 import { CentroServicios } from "../pages/CentroServicios";
@@ -31,7 +30,7 @@ export function App() {
             <Route path="/consultar" element={<Servicio inicio="Quiero rastrear" titulo="Consultar envío" icono="caja" descripcion="Escribe tu guía y te muestro en qué va tu envío." pasos={{ nombres: ["Datos", "Consultando", "Resultado"], resultado: "linea_tiempo_envio" }} />} />
             <Route path="/cotizar" element={<Servicio inicio="Quiero cotizar" titulo="Cotizar flete" icono="calculadora" descripcion="Completa los datos y te doy el valor con su desglose." pasos={{ nombres: ["Datos del envío", "Calculando", "Cotización"], resultado: "resultado_cotizacion" }} />} />
             <Route path="/pqrs" element={<Servicio inicio="Quiero radicar un reclamo" titulo="Gestionar reclamación" icono="alerta" descripcion="Te guío para radicar tu caso con los documentos correctos." pasos={{ nombres: ["Tu caso", "Validando", "Radicado"], resultado: "ticket_pqrs" }} requiereSesion />} />
-            <Route path="/ayuda" element={<Servicio titulo="Conversar con RUTI" icono="chat" descripcion="Mercancías, embalaje, cobertura, tiempos y más." />} />
+            <Route path="/ayuda" element={<Servicio titulo="Conversar con RUTI" icono="chat" descripcion="Mercancías, embalaje, cobertura, tiempos y más." conAgente />} />
             <Route path="/login" element={<Login />} />
             <Route element={<RutaRol roles={["asesor", "admin"]} />}>
               <Route path="/asesor" element={<PanelAsesor />} />
@@ -62,7 +61,6 @@ export function App() {
             />
           </Route>
         </Routes>
-        <ModoAgente />
       </BrowserRouter>
     </AuthProvider>
   );

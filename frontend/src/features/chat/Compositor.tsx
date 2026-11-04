@@ -3,12 +3,13 @@ import type { Conversacion } from "../../hooks/useConversacion";
 
 interface Props {
   conversacion: Conversacion;
-  /** Id del campo de texto: hay dos compositores en la misma página cuando el modo agente está abierto. */
   idEntrada: string;
+  /** En modo agente el micrófono es el orbe de la llamada: un segundo botón competiría por `voz.nivel`. */
+  sinMic?: boolean;
 }
 
 /** Avisos de la conversación y barra de entrada con micrófono. */
-export function Compositor({ conversacion: c, idEntrada }: Props) {
+export function Compositor({ conversacion: c, idEntrada, sinMic }: Props) {
   const { estado, listo, voz, texto } = c;
   const conAsesor = estado.escalamiento?.fase === "transfiriendo" || estado.escalamiento?.fase === "conectado";
   const estadoMic = voz.grabando
@@ -67,7 +68,7 @@ export function Compositor({ conversacion: c, idEntrada }: Props) {
       )}
 
       <form className="compositor" onSubmit={c.mandar}>
-        {voz.microfonoDisponible && (
+        {voz.microfonoDisponible && !sinMic && (
           <button
             type="button"
             className="boton boton--icono boton--mic"

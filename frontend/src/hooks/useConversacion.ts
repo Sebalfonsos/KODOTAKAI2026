@@ -104,6 +104,7 @@ export function useConversacion(servicio: string) {
     mandar,
     alTeclear,
     mic: { alPresionar, alSoltar, alClicTeclado },
+    empezarDictado,
   };
 }
 
