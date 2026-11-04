@@ -293,7 +293,9 @@ async def ml(s: AsyncSession, intencion: str, pregunta: str) -> ResultadoAdmin:
         if intencion == "riesgo_retraso":
             guias = extraer_guias(pregunta)
             if not guias:
-                return ResultadoAdmin(texto="Indica la guía (formato TLX-XXXXXX-CO) para calcular su riesgo de retraso.")
+                return ResultadoAdmin(
+                    texto="Indica la guía (formato TLX-XXXXXX-CO) para calcular su riesgo de retraso."
+                )
             art = servicio.artifact_prediccion(await servicio.predecir_riesgo(s, guias[0]))
         elif intencion == "pronostico_demanda":
             art = servicio.artifact_pronostico(await servicio.pronosticar_demanda(s, _origen(pregunta)))
