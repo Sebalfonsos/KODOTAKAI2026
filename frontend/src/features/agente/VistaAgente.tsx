@@ -59,7 +59,11 @@ export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversa
 
   const ultimo = estado.entradas.at(-1);
   const conAsesor = !!estado.escalamiento && estado.escalamiento.fase !== "resuelto";
-  const pideDatos = ultimo?.rol === "agente" && ultimo.completo && ultimo.artifacts.some((a) => a.tipo.startsWith("formulario_"));
+  // La guía se puede dictar (el servidor la reconoce por sus 6 dígitos): ese formulario no pausa la llamada.
+  const pideDatos =
+    ultimo?.rol === "agente" &&
+    ultimo.completo &&
+    ultimo.artifacts.some((a) => a.tipo.startsWith("formulario_") && a.tipo !== "formulario_guia");
   const libre = listo && !estado.enCurso && !voz.grabando && !voz.preparando && !voz.transcribiendo && !voz.hablando;
   // Se pausa sola cuando hablar no sirve: un formulario por llenar, un asesor humano, un fallo o un aviso del micrófono.
   const pausar = !!voz.aviso || !!estado.fallo || conAsesor || (pideDatos && libre);

@@ -42,7 +42,7 @@ describe("resumirTurno", () => {
     expect(resumirTurno(turno("Con gusto te cotizo. Completa los datos del envío.", { tipo: "formulario_cotizacion" }))).toBe(
       "Con gusto te cotizo. Completa los datos del envío.",
     );
-    expect(resumirTurno(turno("", { tipo: "formulario_guia" }))).toBe("Completa los datos en pantalla para continuar.");
+    expect(resumirTurno(turno("", { tipo: "formulario_pqrs" }))).toBe("Completa los datos en pantalla para continuar.");
   });
 
   it("sin artifacts, lee como máximo dos frases cortas y sin Markdown", () => {
@@ -97,5 +97,16 @@ describe("DetectorVoz", () => {
   it("un chasquido corto no cuenta como voz", () => {
     const d = new DetectorVoz();
     expect(correr(d, [[0.005, 300], [0.3, 100], [0.005, 2000]])).toBe("esperando");
+  });
+});
+
+describe("formulario de guía", () => {
+  const form = { tipo: "formulario_guia" };
+  it("pide los dígitos en lugar de leer el formato", () => {
+    expect(resumirTurno(turno("Claro. Escribe tu número de guía (formato TLX-XXXXXX-CO).", form))).toBe("Dime los seis números de tu guía.");
+  });
+  it("si la guía no existe, lo dice y la vuelve a pedir", () => {
+    const r = resumirTurno(turno("No encontramos la guía TLX-123456-CO. Revisa el número (formato TLX-XXXXXX-CO).", form));
+    expect(r).toBe("No encontré esa guía. Dime los seis números otra vez.");
   });
 });

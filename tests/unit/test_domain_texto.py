@@ -6,7 +6,14 @@ import pytest
 
 from app.domain.estados import traducir_estado
 from app.domain.pii import enmascarar_digitos, enmascarar_nombre, enmascarar_texto
-from app.domain.sanitizar import DatosEnvio, extraer_envio, extraer_guias, limpiar_texto, normalizar_para_busqueda
+from app.domain.sanitizar import (
+    DatosEnvio,
+    extraer_envio,
+    extraer_guias,
+    guia_dictada,
+    limpiar_texto,
+    normalizar_para_busqueda,
+)
 
 
 def test_todos_los_estados_del_dataset_son_conocidos(guias):
@@ -82,6 +89,29 @@ def test_extraer_guias_tolerante(guias):
     assert extraer_guias(texto) == ["TLX-984021-CO", "TLX-551904-CO"]
     assert extraer_guias("TLX-984 021-CO") == ["TLX-984021-CO"]
     assert extraer_guias("sin guía") == []
+
+
+@pytest.mark.parametrize(
+    "transcrito",
+    # Salidas reales del STT al dictar TLX-984021-CO de distintas formas.
+    [
+        "984021",
+        "La guía es 9, 8, 4, 0, 2, 1.",
+        "984-021.",
+        "984.021.",
+        "Mi número de guía es EX 984 021. Sí, o.",
+        "KLX 9840210.",
+        "TLX984021CO",
+        "Nueve, ocho, cuatro, cero, dos, uno.",
+    ],
+)
+def test_guia_dictada(transcrito):
+    assert guia_dictada(transcrito) == "TLX-984021-CO"
+
+
+@pytest.mark.parametrize("transcrito", ["La guía es 9, 8, 4, 0, 2.", "no sé cuál es", "98402100", "9840211"])
+def test_guia_dictada_no_adivina(transcrito):
+    assert guia_dictada(transcrito) is None
 
 
 def test_enmascarar_nombre_solo_iniciales():

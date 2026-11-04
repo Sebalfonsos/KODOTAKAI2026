@@ -286,3 +286,28 @@ async def test_mensaje_del_cliente_se_guarda_antes_de_avisar_al_asesor(cliente, 
     d = await _turno(cliente, sid, {"tipo": "texto", "texto": enviado})
     assert d["intencion"] == "asesor_humano"
     assert commits == ["commit", "publicar"]
+
+
+async def test_guia_dictada_cuando_el_chat_la_pide(cliente, llm):
+    """La voz pierde "TLX" y "CO" pero acierta los dígitos: basta con ellos si el turno anterior pidió la guía."""
+    llm.intencion = "rastrear"
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "dónde está mi paquete"})
+    assert _tipos(d) == ["formulario_guia"]
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Mi número de guía es EX 984 021. Sí, o."})
+    assert d["intencion"] == "rastrear" and "linea_tiempo_envio" in _tipos(d)
+    assert "TLX-984021-CO" in d["texto"]
+    # Ya no se espera una guía: seis dígitos sueltos no se toman como tal.
+    llm.intencion = "general"
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "984021"})
+    assert d["intencion"] != "rastrear"
+
+
+async def test_guia_dictada_inexistente_vuelve_a_pedirla(cliente, llm):
+    llm.intencion = "rastrear"
+    sid = await _sesion(cliente)
+    await _turno(cliente, sid, {"tipo": "texto", "texto": "dónde está mi paquete"})
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "1, 2, 3, 4, 5, 6"})
+    assert _tipos(d) == ["formulario_guia"] and "TLX-123456-CO" in d["texto"]
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "9 8 4 0 2 1"})
+    assert "linea_tiempo_envio" in _tipos(d)
