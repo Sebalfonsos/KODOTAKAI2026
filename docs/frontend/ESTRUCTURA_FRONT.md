@@ -58,7 +58,7 @@ Lectura práctica del criterio 2. Cada frase de "Excelente" se convierte en una 
 | "Navegación fluida" | Sin saltos de layout, foco correcto, historial conservado y animaciones a 60 fps |
 | "Conexión impecable con endpoints" | Cada estado de la petición tiene representación: enviando, respondiendo, error, reintento |
 
-**Riesgo de la rúbrica:** el criterio 3 da "Insuficiente" a una "copia directa de modelos existentes sin adaptación real". Por eso no se copian de Hex su personaje, su texto ni su secuencia de explosiones.
+**Riesgo de la rúbrica:** el criterio 3 da "Insuficiente" a una "copia directa de modelos existentes sin adaptación real". Por eso no se copian de Hex su personaje, su texto ni su secuencia. La portada sí rompe la pantalla, con guion propio (sección 12).
 
 ---
 
@@ -700,9 +700,18 @@ Pantallas y chat → useChat + chatStore → services → backend
 | No se toma | Motivo |
 |---|---|
 | Personaje, textos y secuencia | Riesgo de "copia directa" en el criterio 3 |
-| Explosiones y pantalla rota | Tapan información y afectan usabilidad |
-| Más de 90 archivos de audio | Va contra una PWA ligera |
+| Más de 90 archivos de audio | Va contra una PWA ligera: el sonido se sintetiza con Web Audio, sin archivos |
 | Fondo negro neutro | La portada es azul marino y la aplicación es clara |
+
+**Decisión del dueño del proyecto (2026-11-03): la portada sí destruye la pantalla, como en Hex.** Corrige la versión anterior de esta sección, que descartaba las explosiones y la pantalla rota. Se asume el riesgo frente al criterio 3, por lo que la idea es propia: RUTI colapsa con "¿dónde está mi guía?", llega un camión con la guía en la placa, atraviesa el vidrio, RUTI pide perdón y recompone la página.
+
+Reglas que se mantienen (`features/portada/`):
+- Solo en la portada y solo al pulsar la tecla, que avisa del sonido fuerte, los destellos y el movimiento brusco.
+- "Saltar" y `Esc` funcionan siempre, y ocultar la pestaña lleva al final.
+- Con movimiento reducido no se rompe nada: se muestra el resumen.
+- Destellos de pantalla completa por debajo de 3 por segundo (WCAG 2.3.1).
+- Etiquetado como demostración, sin cifras ni estados de envío inventados, y con el traspaso a un asesor intacto.
+- Es la única excepción a "una sola instancia del SVG": el vacío y los fragmentos repiten IDs de forma temporal, y todas las copias definen los mismos gradientes.
 
 ---
 
@@ -714,7 +723,7 @@ Pantallas y chat → useChat + chatStore → services → backend
 |---|---|---|---|
 | **1. Base** | Proyecto, tipos del contrato, rutas, SSE, sesión, errores, PWA | 1, 2 | **Hecha**, probada con el backend real y un modelo simulado |
 | **2. RUTI base** | SVG inline, `rutiMachine`, 6 estados, movimiento reducido | 3 | **Hecha** |
-| **3. Portada y servicios** | Estructura, navegación y demostración de RUTI (`features/portada/show.ts`) | 2, 3 | **Hecha**; falta probar la voz con el clúster |
+| **3. Portada y servicios** | Estructura, navegación y show de destrucción (`features/portada/`) | 2, 3 | **Hecha**; falta probar sonido y fluidez en equipo real |
 | **4. Prueba con el LLM real** | Correr los flujos en la máquina principal: textos, confianza, RAG y latencias reales | 1 | **Siguiente paso** |
 | **5. Rastreo** | `linea_tiempo_envio` y `mapa_ubicacion` | 1, 2 | Pendiente |
 | **6. Traspaso y asesor** | Tarjeta global y `/asesor`: cola, tomar, responder, resolver | 1, 3 | Pendiente, P0 |
