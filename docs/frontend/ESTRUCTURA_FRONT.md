@@ -94,8 +94,8 @@ Lectura práctica del criterio 2. Cada frase de "Excelente" se convierte en una 
 
 | Encuadre | `viewBox` | Dónde |
 |---|---|---|
-| Cuerpo completo | `0 0 1122 1402` | Portada y panel de escritorio |
-| Cabeza y pin | `100 0 940 780` (oculta cuerpo, brazos y piernas) | Cabecera móvil y formularios |
+| Cuerpo completo | `0 0 1122 1402` | Panel de escritorio |
+| Cabeza y pin | `100 0 940 780` (oculta cuerpo, brazos y piernas) | Portada, cabecera móvil y formularios |
 
 - **`overflow: visible`** en el SVG para que los gestos de brazo no se recorten.
 - **Accesibilidad:** el SVG es decorativo dentro del chat (`aria-hidden="true"`). El estado se anuncia por una región de texto aparte (sección 7.4). El `<title>` solo se conserva si RUTI aparece solo.
@@ -714,7 +714,7 @@ Pantallas y chat → useChat + chatStore → services → backend
 |---|---|---|---|
 | **1. Base** | Proyecto, tipos del contrato, rutas, SSE, sesión, errores, PWA | 1, 2 | **Hecha**, probada con el backend real y un modelo simulado |
 | **2. RUTI base** | SVG inline, `rutiMachine`, 6 estados, movimiento reducido | 3 | **Hecha** |
-| **3. Portada y servicios** | Estructura y navegación | 2 | **Hecha**; falta pulido visual |
+| **3. Portada y servicios** | Estructura, navegación y demostración de RUTI (`features/portada/show.ts`) | 2, 3 | **Hecha**; falta probar la voz con el clúster |
 | **4. Prueba con el LLM real** | Correr los flujos en la máquina principal: textos, confianza, RAG y latencias reales | 1 | **Siguiente paso** |
 | **5. Rastreo** | `linea_tiempo_envio` y `mapa_ubicacion` | 1, 2 | Pendiente |
 | **6. Traspaso y asesor** | Tarjeta global y `/asesor`: cola, tomar, responder, resolver | 1, 3 | Pendiente, P0 |
