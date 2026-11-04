@@ -709,6 +709,7 @@
                   "linea_tiempo_envio": "#/components/schemas/LineaTiempoEnvio",
                   "mapa_ubicacion": "#/components/schemas/MapaUbicacion",
                   "metricas_modelo": "#/components/schemas/MetricasModelo",
+                  "plan_envio": "#/components/schemas/PlanEnvio",
                   "respuestas_rapidas": "#/components/schemas/RespuestasRapidas",
                   "resultado_cotizacion": "#/components/schemas/ResultadoCotizacion",
                   "tabla_datos": "#/components/schemas/TablaDatos",
@@ -737,6 +738,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/VeredictoMercancia"
+                },
+                {
+                  "$ref": "#/components/schemas/PlanEnvio"
                 },
                 {
                   "$ref": "#/components/schemas/GuiaEmbalaje"
@@ -2597,6 +2601,111 @@
           "resuelto_en"
         ],
         "title": "EscalamientoOut",
+        "type": "object"
+      },
+      "EstadoAutoentrenamientoOut": {
+        "description": "Reglas vigentes (variables de entorno `ML_*`) y su medición actual. Las reglas no se editan por API.",
+        "properties": {
+          "datos_simulados": {
+            "default": true,
+            "title": "Datos Simulados",
+            "type": "boolean"
+          },
+          "delta_deriva": {
+            "description": "Reentrena si Brier en vivo − Brier de entrenamiento lo supera",
+            "title": "Delta Deriva",
+            "type": "number"
+          },
+          "error_entrenamiento": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Entrenamiento"
+          },
+          "error_vivo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Brier en vivo; requiere al menos 50 predicciones con desenlace",
+            "title": "Error Vivo"
+          },
+          "horas_desde_ultimo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horas Desde Ultimo"
+          },
+          "max_horas": {
+            "description": "`ML_MAX_HORAS`: reentrena si el último es más antiguo",
+            "examples": [
+              24
+            ],
+            "title": "Max Horas",
+            "type": "integer"
+          },
+          "min_etiquetados": {
+            "description": "Por debajo de este número no se puede entrenar",
+            "title": "Min Etiquetados",
+            "type": "integer"
+          },
+          "min_etiquetas_nuevas": {
+            "description": "`ML_MIN_NUEVOS`: reentrena al llegar a este número",
+            "examples": [
+              200
+            ],
+            "title": "Min Etiquetas Nuevas",
+            "type": "integer"
+          },
+          "n_etiquetados": {
+            "title": "N Etiquetados",
+            "type": "integer"
+          },
+          "n_nuevos": {
+            "title": "N Nuevos",
+            "type": "integer"
+          },
+          "n_vivo": {
+            "title": "N Vivo",
+            "type": "integer"
+          },
+          "revision_cada_min": {
+            "description": "`ML_CHECK_MIN`",
+            "examples": [
+              10
+            ],
+            "title": "Revision Cada Min",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision_cada_min",
+          "min_etiquetas_nuevas",
+          "max_horas",
+          "delta_deriva",
+          "min_etiquetados",
+          "n_etiquetados",
+          "n_nuevos",
+          "error_vivo",
+          "n_vivo",
+          "error_entrenamiento",
+          "horas_desde_ultimo"
+        ],
+        "title": "EstadoAutoentrenamientoOut",
         "type": "object"
       },
       "EstadoEscalamiento": {
@@ -5564,6 +5673,155 @@
           "total"
         ],
         "title": "Paginacion",
+        "type": "object"
+      },
+      "PasoPlan": {
+        "properties": {
+          "detalle": {
+            "maxLength": 500,
+            "title": "Detalle",
+            "type": "string"
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "titulo": {
+            "maxLength": 120,
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "titulo",
+          "detalle"
+        ],
+        "title": "PasoPlan",
+        "type": "object"
+      },
+      "PlanEnvio": {
+        "additionalProperties": false,
+        "description": "Lo que hay que saber y hacer para despachar un producto; va seguido del formulario de cotización.",
+        "examples": [
+          {
+            "estado": "sin_registro",
+            "fuentes": [
+              {
+                "doc_codigo": "DOC-OPS-2026-03",
+                "documento": "Manual de mercancías peligrosas y embalaje",
+                "seccion": "§4 Estándares de embalaje"
+              }
+            ],
+            "id": "art-plan-01",
+            "pasos": [
+              {
+                "detalle": "El remitente responde por un embalaje que resista vibración, frenado y apilamiento.",
+                "items": [],
+                "titulo": "Embala"
+              }
+            ],
+            "producto": "clavos",
+            "resumen": "No aparece en nuestro catálogo de prohibidos y mercancías peligrosas. No es una aprobación.",
+            "tipo": "plan_envio",
+            "titulo": "Plan para enviar clavos"
+          }
+        ],
+        "properties": {
+          "acciones": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Accion"
+            },
+            "title": "Acciones",
+            "type": "array"
+          },
+          "estado": {
+            "enum": [
+              "permitido",
+              "restringido",
+              "solo_ftl",
+              "sin_registro",
+              "sin_producto"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "fuentes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Cita"
+            },
+            "title": "Fuentes",
+            "type": "array"
+          },
+          "id": {
+            "description": "Único dentro de la sesión",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "pasos": {
+            "items": {
+              "$ref": "#/components/schemas/PasoPlan"
+            },
+            "minItems": 1,
+            "title": "Pasos",
+            "type": "array"
+          },
+          "producto": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producto"
+          },
+          "resumen": {
+            "maxLength": 500,
+            "title": "Resumen",
+            "type": "string"
+          },
+          "tipo": {
+            "const": "plan_envio",
+            "default": "plan_envio",
+            "title": "Tipo",
+            "type": "string"
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo"
+          },
+          "version": {
+            "const": 1,
+            "default": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "estado",
+          "resumen",
+          "pasos"
+        ],
+        "title": "PlanEnvio",
         "type": "object"
       },
       "PlazoOut": {
@@ -9392,6 +9650,66 @@
         ]
       }
     },
+    "/api/v1/admin/ml/estado": {
+      "get": {
+        "description": "Qué dispararía el próximo reentrenamiento: reglas configuradas y valores medidos ahora.",
+        "operationId": "estado_api_v1_admin_ml_estado_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoAutoentrenamientoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Prohibido"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reglas y estado del autoentrenamiento",
+        "tags": [
+          "Predicciones IA"
+        ]
+      }
+    },
     "/api/v1/admin/ml/modelos": {
       "get": {
         "description": "Modelos activos y los últimos 50 (candidatos, retirados, rechazados) con métricas y línea base.",
@@ -11176,6 +11494,99 @@
           }
         ],
         "summary": "Historial y contexto de una sesión",
+        "tags": [
+          "Asesor"
+        ]
+      }
+    },
+    "/api/v1/asesor/sesiones/{sesion_id}/eventos": {
+      "get": {
+        "description": "El chat punto a punto del lado del asesor. Envía `: ping` cada 15 s. Lo publicado durante un corte no se\nreenvía: al reconectar, consulta `GET /asesor/sesiones/{id}`.",
+        "operationId": "eventos_sesion_api_v1_asesor_sesiones__sesion_id__eventos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sesion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sesion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/event-stream": {}
+            },
+            "description": "Eventos `mensaje_cliente`, `mensaje_asesor` y `escalamiento_resuelto`"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No autenticado"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Prohibido"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "No encontrado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Error interno"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Eventos en vivo de la sesión (SSE)",
         "tags": [
           "Asesor"
         ]

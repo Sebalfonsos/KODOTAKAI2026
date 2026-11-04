@@ -6,7 +6,7 @@ import uuid
 import pytest
 from sqlalchemy import select
 
-from app.ai.eventos import suscribir
+from app.ai.eventos import publicar, stream_sse, suscribir
 from app.db import SessionLocal
 from app.models import Auditoria, Escalamiento, Mensaje, SesionChat, Usuario
 from app.models.base import RolMensaje
@@ -220,3 +220,24 @@ async def test_fila_bloqueada_por_otra_transaccion_responde_409_sin_esperar(clie
         assert "está tomando" in p["detail"]
         await otra.rollback()
     assert (await cliente.post(f"{R}/escalamientos/{esc_id}/tomar", headers=h_asesor)).status_code == 200
+
+
+async def test_eventos_del_asesor_permisos_y_contenido(cliente, h_asesor, h_cliente):
+    sesion_id, _ = await crear_escalamiento()
+    problema(await cliente.get(f"{R}/sesiones/{sesion_id}/eventos"), 401)
+    problema(await cliente.get(f"{R}/sesiones/{sesion_id}/eventos", headers=h_cliente), 403)
+    problema(await cliente.get(f"{R}/sesiones/{uuid.uuid4()}/eventos", headers=h_asesor), 404)
+
+    # A diferencia del stream del cliente, este sí entrega lo que escribe el cliente.
+    stream = stream_sse(sesion_id)
+    assert await anext(stream) == ": conectado\n\n"
+    publicar(sesion_id, ("mensaje_cliente", {"texto": "¿Sigues ahí?"}))
+    assert await anext(stream) == 'event: mensaje_cliente\ndata: {"texto": "¿Sigues ahí?"}\n\n'
+    await stream.aclose()
+
+    stream = stream_sse(sesion_id, ocultar=frozenset({"mensaje_cliente"}))
+    await anext(stream)
+    publicar(sesion_id, ("mensaje_cliente", {"texto": "eco"}))
+    publicar(sesion_id, ("mensaje_asesor", {"texto": "Hola"}))
+    assert (await anext(stream)).startswith("event: mensaje_asesor")
+    await stream.aclose()

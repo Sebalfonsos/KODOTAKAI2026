@@ -23,7 +23,7 @@ EJEMPLOS = [
 
 def test_catalogo_completo_y_tipos_unicos():
     tipos = [m.model_fields["tipo"].default for m in MODELOS_ARTIFACT]
-    assert len(tipos) == len(set(tipos)) == 23
+    assert len(tipos) == len(set(tipos)) == 24
     esquema = ADAPTER.json_schema()
     assert set(esquema["discriminator"]["mapping"]) == set(tipos)
 

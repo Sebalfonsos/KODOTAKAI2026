@@ -57,8 +57,8 @@ Un recurso ajeno responde **404** (no 403) para no revelar que existe.
 | Catálogos | `GET /cobertura/municipios?q=&page=`, `GET /cobertura/municipios/{dane}`, `GET /trayectos/origenes`, `GET /trayectos/destinos?origen=` | invitado |
 | Mercancías | `GET /mercancias/consultar?producto=`, `GET /mercancias/clases` | invitado |
 | PQRS | `POST /pqrs/crear-ticket` (admite `Idempotency-Key`), `GET /pqrs/{radicado}`, `POST /pqrs/{radicado}/documentos` (multipart), `GET /pqrs/plazo?guia=&tipo=`, `POST /pqrs/liquidacion-estimada` | cliente (dueño) |
-| Asesor | `GET /asesor/escalamientos?estado=`, `POST /asesor/escalamientos/{id}/tomar`, `POST /asesor/sesiones/{id}/mensajes`, `POST /asesor/escalamientos/{id}/resolver` | asesor |
-| Admin | `/admin/usuarios` (CRUD), `GET /admin/metricas?desde=&hasta=`, `/admin/conversaciones`, `/admin/envios`, `/admin/pqrs`, `/admin/rag/*`, `/admin/ml/*`, `POST /admin/simulador/avanzar?dias=`, `POST /admin/chat` (mismo protocolo SSE que el chat) | admin |
+| Asesor | `GET /asesor/escalamientos?estado=`, `POST /asesor/escalamientos/{id}/tomar`, `GET /asesor/sesiones/{id}`, `GET /asesor/sesiones/{id}/eventos` (SSE), `POST /asesor/sesiones/{id}/mensajes`, `POST /asesor/escalamientos/{id}/resolver` | asesor |
+| Admin | `/admin/usuarios` (CRUD), `GET /admin/metricas?desde=&hasta=`, `/admin/conversaciones`, `/admin/envios`, `/admin/pqrs`, `/admin/rag/*`, `/admin/ml/*` (incluye `GET /admin/ml/estado`: reglas y medición del autoentrenamiento), `POST /admin/simulador/avanzar?dias=`, `POST /admin/chat` (mismo protocolo SSE que el chat) | admin |
 
 Todas las rutas van con el prefijo `/api/v1`. Salud: `GET /health` y `GET /health/ready` (sin prefijo).
 
@@ -157,6 +157,8 @@ async function enviar(sesionId, cuerpo, token, onEvento) {
 
 - **Turno (`POST …/mensajes`)**: no reenvíes el mensaje si la conexión se corta (duplicarías el turno). Haz `GET /api/v1/chat/sesiones/{id}`: devuelve el historial persistido con los artifacts y el texto final de cada turno; reconcilia por `turno_id`.
 - **Eventos del asesor (`GET …/eventos`)**: también con `fetch` (lleva token). Si se corta, reintenta con espera exponencial (1 s, 2 s, 4 s… máx. 30 s) y, al reconectar, consulta `GET /chat/sesiones/{id}` para recuperar lo que llegó mientras tanto.
+- **Eventos del lado del asesor (`GET /asesor/sesiones/{id}/eventos`)**: además de `mensaje_asesor` y `escalamiento_resuelto` entrega `mensaje_cliente`. Mismo criterio de reconexión; al reconectar, `GET /asesor/sesiones/{id}`.
+- **Mientras la sesión está escalada**, cada `POST …/mensajes` del cliente responde `meta` con `intencion: "asesor_humano"`: es un acuse de que llegó al asesor, no una respuesta de la IA.
 - **429** trae `Retry-After` (segundos). **503/504** (LLM caído o lento) también; el backend escala a humano en ese caso y nunca deja la respuesta vacía.
 
 ### 4.5 Ejemplo completo: «quiero cotizar»
@@ -565,6 +567,38 @@ Accesibilidad para todos: cada artifact es una región (`<section aria-labelledb
       "doc_codigo": "DOC-OPS-2026-03",
       "documento": "Manual de mercancías peligrosas y embalaje",
       "seccion": "5. Lista expresa de artículos prohibidos"
+    }
+  ]
+}
+```
+
+#### `plan_envio`
+
+- **Cuándo aparece:** Intención `enviar` («quiero enviar clavos de Bogotá a Medellín»), seguido de `formulario_cotizacion` con producto y ciudades precargados. Se resuelve sin LLM. Un producto prohibido no llega aquí: responde `veredicto_mercancia`.
+- **Renderizado:** Insignia por `estado`, `resumen` y `pasos` numerados con sus `items`. `sin_registro` significa que el catálogo no clasifica el producto: **no** es una aprobación ni debe pintarse como tal. `sin_producto` significa que aún no se sabe qué se envía.
+
+```json
+{
+  "id": "art-plan-01",
+  "version": 1,
+  "titulo": "Plan para enviar clavos",
+  "acciones": [],
+  "tipo": "plan_envio",
+  "producto": "clavos",
+  "estado": "sin_registro",
+  "resumen": "No aparece en nuestro catálogo de prohibidos y mercancías peligrosas. No es una aprobación.",
+  "pasos": [
+    {
+      "titulo": "Embala",
+      "detalle": "El remitente responde por un embalaje que resista vibración, frenado y apilamiento.",
+      "items": []
+    }
+  ],
+  "fuentes": [
+    {
+      "doc_codigo": "DOC-OPS-2026-03",
+      "documento": "Manual de mercancías peligrosas y embalaje",
+      "seccion": "§4 Estándares de embalaje"
     }
   ]
 }

@@ -188,3 +188,101 @@ async def test_chat_admin(cliente, llm, h_admin, h_cliente):
     assert tabla["tipo"] == "tabla_datos" and any(f["guia"] == "TLX-310482-CO" for f in tabla["filas"])
     r = await cliente.post("/api/v1/admin/chat?stream=false", json={"texto": "dame los kpis"}, headers=h_admin)
     assert r.json()["artifacts"][0]["tipo"] == "tarjetas_kpi"
+
+
+async def test_enviar_producto_sin_registro_da_plan_y_formulario_sin_llm(cliente, llm, monkeypatch):
+    """Caso guía del modo agente: «clavos» no está en el catálogo. No se aprueba ni se escala, y no hace falta LLM."""
+
+    async def sin_llm(*a, **k):
+        raise AssertionError("esta tarea no debe llamar al LLM")
+
+    monkeypatch.setattr(llm, "extraer_json", sin_llm)
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Quiero enviar clavos de Bogotá a Medellín"})
+    assert d["intencion"] == "enviar" and d["escalamiento"] is None
+    assert _tipos(d)[:2] == ["plan_envio", "formulario_cotizacion"]
+    plan, form = d["artifacts"][:2]
+    assert plan["producto"] == "clavos" and plan["estado"] == "sin_registro"
+    assert "No es una aprobación" in plan["resumen"]
+    campos = {c["nombre"]: c.get("valor") for c in form["campos"]}
+    assert campos["contenido"] == "clavos"
+    assert campos["origen"] == "Bogotá D.C." and campos["destino"] == "Medellín"
+    assert campos["peso_kg"] is None
+
+
+async def test_enviar_restringido_trae_documentos_y_sugiere_servicio(cliente, llm):
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Necesito enviar 5 litros de ácido clorhídrico a Cali"})
+    plan, form = d["artifacts"][:2]
+    assert plan["estado"] == "restringido"
+    assert any("NTC 4532" in i for p in plan["pasos"] for i in p["items"])
+    assert {c["nombre"]: c.get("valor") for c in form["campos"]}["servicio"] == "mercancia_peligrosa"
+
+
+async def test_enviar_prohibido_no_llega_al_formulario(cliente, llm):
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Quiero enviar pólvora"})
+    assert "formulario_cotizacion" not in _tipos(d) and "plan_envio" not in _tipos(d)
+    assert next(a for a in d["artifacts"] if a["tipo"] == "veredicto_mercancia")["veredicto"] == "prohibido"
+
+
+async def test_enviar_y_llenar_el_formulario_termina_en_cotizacion(cliente, llm):
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Quiero enviar clavos de Bogotá a Medellín"})
+    form = d["artifacts"][1]
+    valores = {"origen": "Bogotá D.C.", "destino": "Medellín", "alto_cm": 40, "ancho_cm": 50, "largo_cm": 60}
+    valores |= {"peso_kg": 45.5, "valor_declarado_cop": 12500000, "servicio": "paqueteria", "contenido": "clavos"}
+    d = await _turno(cliente, sid, {"tipo": "artifact_submit", "artifact_id": form["id"], "valores": valores})
+    assert d["artifacts"][0]["tipo"] == "resultado_cotizacion" and d["artifacts"][0]["total"] == "190975"
+
+
+async def test_puedo_enviar_sigue_siendo_consulta_de_mercancia(cliente, llm):
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "¿Puedo enviar copas de vidrio?"})
+    assert d["intencion"] == "mercancia" and "veredicto_mercancia" in _tipos(d)
+
+
+async def test_pedir_asesor_gana_aunque_mencione_guia_o_dano(cliente, llm):
+    sid = await _sesion(cliente)
+    d = await _turno(
+        cliente, sid, {"tipo": "texto", "texto": "Quiero hablar con un asesor sobre la guía TLX-551904-CO"}
+    )
+    assert d["escalamiento"]["criterio"] == "CRIT-002"
+    sid = await _sesion(cliente)
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": "Me llegó la caja rota, pásame con un asesor"})
+    assert d["escalamiento"]["criterio"] == "CRIT-002"
+
+
+async def test_mensaje_del_cliente_se_guarda_antes_de_avisar_al_asesor(cliente, llm, monkeypatch):
+    """El asesor recarga el historial al recibir el evento: el mensaje ya debe estar confirmado en la BD."""
+    sid = await _sesion(cliente)
+    await _turno(cliente, sid, {"tipo": "texto", "texto": "Quiero hablar con un asesor"})
+    enviado = "¿Siguen ahí?"
+    commits = []
+    original = orquestador.SessionLocal
+
+    class Sesion:
+        """Envuelve la sesión real para registrar el commit."""
+
+        def __init__(self):
+            self._s = original()
+
+        async def __aenter__(self):
+            real = await self._s.__aenter__()
+            commit = real.commit
+
+            async def registrar():
+                await commit()
+                commits.append("commit")
+
+            real.commit = registrar
+            return real
+
+        async def __aexit__(self, *a):
+            return await self._s.__aexit__(*a)
+
+    monkeypatch.setattr(orquestador, "SessionLocal", Sesion)
+    monkeypatch.setattr(orquestador, "publicar", lambda *a: commits.append("publicar"))
+    d = await _turno(cliente, sid, {"tipo": "texto", "texto": enviado})
+    assert d["intencion"] == "asesor_humano"
+    assert commits == ["commit", "publicar"]

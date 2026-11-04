@@ -22,6 +22,7 @@ HOY = date(2026, 11, 3)
 RUTAS = [
     ("get", "/ml/modelos"),
     ("get", "/ml/entrenamientos"),
+    ("get", "/ml/estado"),
     ("post", "/ml/entrenar"),
     ("get", "/ml/riesgo-retraso?guia=TLX-984021-CO"),
     ("get", "/ml/pronostico-demanda?origen=Cali"),
@@ -45,6 +46,14 @@ async def test_solo_admin(cliente, h_cliente, h_asesor):
 async def test_sin_modelo_activo_503(cliente, h_admin):
     r = await cliente.get(R + "/ml/riesgo-retraso", params={"guia": "TLX-984021-CO"}, headers=h_admin)
     problema(r, 503, "MODELO_NO_ENTRENADO")
+
+
+async def test_estado_expone_reglas_y_medicion(cliente, h_admin, sembrado):
+    r = await cliente.get(R + "/ml/estado", headers=h_admin)
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["min_etiquetas_nuevas"] == 200 and d["max_horas"] == 24 and d["delta_deriva"] == 0.05
+    assert d["n_etiquetados"] >= d["min_etiquetados"] and d["datos_simulados"] is True
 
 
 async def test_siembra_respeta_esquema_y_es_idempotente(sembrado):
@@ -99,6 +108,9 @@ async def test_pronostico_por_origen_o_hub(cliente, h_admin):
     assert p["origen"] == "Bogotá D.C." and len(p["pronostico"]) == 14 and len(p["historico"]) == 28
     assert all(x["p10"] <= x["prediccion"] <= x["p90"] for x in p["pronostico"])
     Grafico.model_validate(servicio.artifact_pronostico(p).model_dump())
+
+    r = await cliente.get(R + "/ml/pronostico-demanda", params={"origen": "Bogotá", "dias": 1}, headers=h_admin)
+    assert r.status_code == 200 and r.json()["origen"] == "Bogotá D.C."
 
     r = await cliente.get(
         R + "/ml/pronostico-demanda", params={"origen": "Hub Regional Yumbo - Valle", "dias": 3}, headers=h_admin

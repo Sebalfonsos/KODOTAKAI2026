@@ -418,10 +418,13 @@ async def pronosticar_demanda(s: AsyncSession, origen_o_hub: str, dias: int = 14
             )
         ).all()
     )
-    buscado = normalizar_para_busqueda(origen_o_hub)
-    origen = next(
-        (o for o, h in hubs.items() if buscado in (normalizar_para_busqueda(o), normalizar_para_busqueda(h))), None
-    )
+
+    # "Bogotá" también es "Bogotá D.C.": así lo dice cualquiera que pregunte.
+    def clave(nombre: str) -> str:
+        return normalizar_para_busqueda(nombre).removesuffix(" d c")
+
+    buscado = clave(origen_o_hub)
+    origen = next((o for o, h in hubs.items() if buscado in (clave(o), clave(h))), None)
     if origen is None:
         raise ApiError(
             404,
