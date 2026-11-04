@@ -85,7 +85,7 @@ function TarjetaModelo({ m }: { m: Modelo }) {
         </table>
       </div>
       <p className="nota">
-        {m.algoritmo} · {NUM.format(m.n_train)} muestras · datos hasta {fecha(m.entrenado_hasta)}
+        {m.algoritmo.replaceAll("_", " ")} · {NUM.format(m.n_train)} muestras · datos hasta {fecha(m.entrenado_hasta)}
       </p>
     </article>
   );
@@ -222,7 +222,7 @@ function PanelRiesgo() {
             <strong>{NUM.format(riesgo.probabilidad * 100)} %</strong>
             <span className={`etiqueta etiqueta--${clase}`}>Riesgo {riesgo.nivel}</span>
             <span className="nota">
-              {riesgo.guia} · {riesgo.estado_actual}
+              {riesgo.guia} · {riesgo.estado_actual.replaceAll("_", " ").toLowerCase()}
               {riesgo.retrasado_real != null && ` · Desenlace real: ${riesgo.retrasado_real ? "se retrasó" : "a tiempo"}`} · Modelo v{riesgo.version}
             </span>
           </div>

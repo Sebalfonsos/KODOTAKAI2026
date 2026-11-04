@@ -1,6 +1,6 @@
 """Carga idempotente de datos de referencia, dataset del reto, usuarios demo y corpus RAG.
 
-Uso: `uv run python -m app.seed [--sin-rag] [--historial-meses N]`. Se puede ejecutar varias veces.
+Uso: `uv run python -m app.seed [--sin-rag] [--historial-meses N] [--entrenar]`. Se puede ejecutar varias veces.
 """
 
 import argparse
@@ -362,7 +362,7 @@ async def cargar_usuarios(s: AsyncSession) -> int:
     return len(filas)
 
 
-async def main(con_rag: bool = True, historial_meses: int = 0) -> None:
+async def main(con_rag: bool = True, historial_meses: int = 0, entrenar: bool = False) -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     datos = get_settings().datos_dir
     async with SessionLocal() as s, s.begin():
@@ -376,6 +376,18 @@ async def main(con_rag: bool = True, historial_meses: int = 0) -> None:
         async with SessionLocal() as s:
             log.info("historial simulado: %s", await sembrar_historial(s, historial_meses))
             await s.commit()
+    if entrenar:
+        from sqlalchemy import select
+
+        from app.ml import servicio
+        from app.models import ModeloMl
+        from app.models.base import EstadoModelo
+
+        async with SessionLocal() as s:
+            if await s.scalar(select(ModeloMl.id).where(ModeloMl.estado == EstadoModelo.ACTIVO).limit(1)):
+                log.info("modelos ML: ya hay modelos activos, se omite el entrenamiento inicial")
+            else:
+                log.info("modelos ML: %s", await servicio.entrenar(s, "inicial"))
     if con_rag:
         from app.ai import rag
 
@@ -388,5 +400,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--sin-rag", action="store_true", help="No ingerir el corpus RAG (requiere Ollama)")
     p.add_argument("--historial-meses", type=int, default=0, help="Meses de historial simulado para ML (0 = no)")
+    p.add_argument("--entrenar", action="store_true", help="Entrenar los modelos ML si no hay ninguno activo")
     a = p.parse_args()
-    asyncio.run(main(con_rag=not a.sin_rag, historial_meses=a.historial_meses))
+    asyncio.run(main(con_rag=not a.sin_rag, historial_meses=a.historial_meses, entrenar=a.entrenar))

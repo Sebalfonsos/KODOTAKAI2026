@@ -1,8 +1,9 @@
-.PHONY: up down migrate seed dev test eval lint fmt openapi load
+.PHONY: up down migrate seed seed-ml dev test eval lint fmt openapi load
 up:        ; docker compose up -d --wait
 down:      ; docker compose down
 migrate:   ; uv run alembic upgrade head
 seed:      ; uv run python -m app.seed
+seed-ml:   ; uv run python -m app.seed --historial-meses 6 --entrenar
 dev:       ; uv run uvicorn app.main:app --host 127.0.0.1 --port 8100 --reload
 test:      ; uv run pytest -q -m "not eval" --cov=app --cov-report=term-missing:skip-covered
 eval:      ; uv run pytest -q -m eval tests/eval
