@@ -44,11 +44,11 @@ export function Avalancha({ vista, escenario }: { vista: VistaShow; escenario: E
           return (
             <li
               key={c.id}
-              className="caso"
+              className="tarjeta-caos"
               style={{ "--x": `${u.x}px`, "--y": `${u.y}px`, "--r": `${u.r}deg`, "--e": u.e, "--tono": TONOS[c.id % TONOS.length] } as CSSProperties}
             >
-              <span className="caso__quien">
-                <span className="caso__avatar">{c.iniciales}</span>
+              <span className="tarjeta-caos__quien">
+                <span className="tarjeta-caos__avatar">{c.iniciales}</span>
                 {c.quien}
               </span>
               {c.texto}
