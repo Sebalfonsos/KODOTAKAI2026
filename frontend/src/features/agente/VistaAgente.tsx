@@ -53,7 +53,7 @@ function Turno({ turno, contexto, ultimo }: { turno: TurnoAgente; contexto: Cont
  */
 export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversacion; vista: VistaRuti }) {
   const { estado, listo, enviar, voz, empezarDictado } = c;
-  const { detener, callar } = voz;
+  const { cancelar, callar } = voz;
   const [activo, setActivo] = useState(false);
   const turnoFinal = useRef<HTMLDivElement>(null);
 
@@ -78,10 +78,10 @@ export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversa
   // Salir del modo agente corta el micrófono y la lectura.
   useEffect(
     () => () => {
-      detener();
+      cancelar();
       callar();
     },
-    [detener, callar],
+    [cancelar, callar],
   );
 
   const tarjetas = ultimo?.rol === "agente" ? ultimo.artifacts.length : 0;
@@ -89,11 +89,12 @@ export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversa
     turnoFinal.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [estado.entradas.length, tarjetas]);
 
+  // Colgar descarta lo que se estaba grabando; retomar interrumpe a RUTI y escucha de inmediato.
   const alternar = () => {
+    callar();
     if (activo) {
       setActivo(false);
-      detener();
-      callar();
+      cancelar();
       return;
     }
     voz.cerrarAviso();
