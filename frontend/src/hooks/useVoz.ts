@@ -164,7 +164,6 @@ export function useVoz(voz: Voz = "female") {
 
       g.onstart = () => {
         inicio = performance.now();
-        setGrabando(true);
       };
       g.ondataavailable = (e) => e.data.size && trozos.push(e.data);
       g.onstop = async () => {
@@ -199,6 +198,8 @@ export function useVoz(voz: Voz = "female") {
         }
       };
       grabadora.current = g;
+      // En el mismo lote que `preparando=false`: esperar a `onstart` dejaba un render "libre" y el modo agente colgaba.
+      setGrabando(true);
       g.start();
     },
     [callar, obtenerFlujo, detener, liberarFlujo],

@@ -64,16 +64,20 @@ export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversa
   // Se pausa sola cuando hablar no sirve: un formulario por llenar, un asesor humano, un fallo o un aviso del micrófono.
   const pausar = !!voz.aviso || !!estado.fallo || conAsesor || (pideDatos && libre);
 
+  // Pausa al aparecer la condición, no mientras dura: si el usuario vuelve a tocar, la llamada sigue
+  // (p. ej. dicta el número de guía en lugar de escribirlo en el formulario).
+  const pausaPrevia = useRef(pausar);
   useEffect(() => {
-    if (activo && pausar) setActivo(false);
-  }, [activo, pausar]);
+    if (pausar && !pausaPrevia.current) setActivo(false);
+    pausaPrevia.current = pausar;
+  }, [pausar]);
 
   useEffect(() => {
-    if (!activo || pausar || !libre) return;
+    if (!activo || !libre) return;
     const t = window.setTimeout(empezarDictado, ESPERA_ESCUCHA_MS);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `empezarDictado` es nuevo en cada render.
-  }, [activo, pausar, libre]);
+  }, [activo, libre]);
 
   // Salir del modo agente corta el micrófono y la lectura.
   useEffect(
