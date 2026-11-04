@@ -14,12 +14,13 @@ import {
   GuiaEmbalaje,
   LineaTiempoEnvio,
   MapaUbicacion,
+  PlanEnvio,
   ResultadoCotizacion,
   SoloAcciones,
   TicketPqrs,
   VeredictoMercancia,
 } from "./cliente";
-import { Pendiente } from "./Pendiente";
+import { ColaEscalamientos, GraficoArtifact, MetricasModelo, TablaDatos, TarjetaPrediccion, TarjetasKpi } from "./admin";
 
 export interface PropsArtifact<T extends TipoArtifact = TipoArtifact> {
   artifact: Extract<Artifact, { tipo: T }>;
@@ -28,7 +29,7 @@ export interface PropsArtifact<T extends TipoArtifact = TipoArtifact> {
 
 /**
  * Un componente por tipo de artifact. Al ser un `Record` sobre la unión generada desde OpenAPI, TypeScript
- * falla si el contrato añade un tipo y aquí falta. `Pendiente` marca lo que aún no se ha construido.
+ * falla si el contrato añade un tipo y aquí falta.
  */
 const REGISTRO: { [T in TipoArtifact]: ComponentType<PropsArtifact<T>> } = {
   // Formularios del servidor: comparten renderizador.
@@ -42,6 +43,7 @@ const REGISTRO: { [T in TipoArtifact]: ComponentType<PropsArtifact<T>> } = {
   mapa_ubicacion: MapaUbicacion,
   resultado_cotizacion: ResultadoCotizacion,
   veredicto_mercancia: VeredictoMercancia,
+  plan_envio: PlanEnvio,
   guia_embalaje: GuiaEmbalaje,
   ficha_cobertura: FichaCobertura,
   estado_plazo: EstadoPlazo,
@@ -51,13 +53,13 @@ const REGISTRO: { [T in TipoArtifact]: ComponentType<PropsArtifact<T>> } = {
   respuestas_rapidas: SoloAcciones,
   confirmacion: Confirmacion,
   encuesta_satisfaccion: EncuestaSatisfaccion,
-  // Administración: panel /admin.
-  tarjetas_kpi: Pendiente,
-  grafico: Pendiente,
-  tabla_datos: Pendiente,
-  tarjeta_prediccion: Pendiente,
-  metricas_modelo: Pendiente,
-  cola_escalamientos: Pendiente,
+  // Administración: chat de /admin.
+  tarjetas_kpi: TarjetasKpi,
+  grafico: GraficoArtifact,
+  tabla_datos: TablaDatos,
+  tarjeta_prediccion: TarjetaPrediccion,
+  metricas_modelo: MetricasModelo,
+  cola_escalamientos: ColaEscalamientos,
 };
 
 export function ArtifactView({ artifact, contexto }: { artifact: Artifact; contexto: ContextoArtifact }) {
@@ -93,6 +95,7 @@ const ICONO: Partial<Record<TipoArtifact, NombreIcono>> = {
   mapa_ubicacion: "pin",
   resultado_cotizacion: "moneda",
   veredicto_mercancia: "escudo",
+  plan_envio: "ruta",
   guia_embalaje: "caja",
   ficha_cobertura: "ruta",
   estado_plazo: "reloj",
@@ -108,6 +111,7 @@ const NOMBRE: Partial<Record<TipoArtifact, string>> = {
   mapa_ubicacion: "Última ubicación",
   resultado_cotizacion: "Resultado de la cotización",
   veredicto_mercancia: "Veredicto de la mercancía",
+  plan_envio: "Plan de envío",
   guia_embalaje: "Guía de embalaje",
   ficha_cobertura: "Cobertura",
   estado_plazo: "Plazo de la reclamación",

@@ -8,6 +8,8 @@ export interface TurnoAgente {
   citas: Cita[];
   confianza: number | null;
   completo: boolean;
+  /** Confirmación de que el mensaje llegó al asesor: no es una respuesta, no se pinta ni se lee en voz alta. */
+  acuse?: boolean;
 }
 export interface MensajeSimple {
   rol: "usuario" | "asesor" | "sistema";
@@ -68,7 +70,7 @@ function enTurno(e: EstadoChat, cambio: (t: TurnoAgente) => TurnoAgente): Estado
 function aplicarEvento(e: EstadoChat, ev: EventoChat): EstadoChat {
   switch (ev.evento) {
     case "meta":
-      return { ...e, entradas: [...e.entradas, turnoVacio(ev.data.turno_id)] };
+      return { ...e, entradas: [...e.entradas, { ...turnoVacio(ev.data.turno_id), acuse: ev.data.intencion === "asesor_humano" }] };
     case "artifact":
       return enTurno(e, (t) => ({ ...t, artifacts: [...t.artifacts, ev.data.artifact] }));
     case "delta":

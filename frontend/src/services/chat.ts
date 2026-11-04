@@ -61,25 +61,21 @@ export type EventoAsesor =
  * Eventos del asesor. Reconecta con espera exponencial (1 s … 30 s) y avisa para reconciliar con el historial,
  * porque lo publicado durante un corte no se reenvía (docs/frontend.md §4.4).
  */
-export function escucharAsesor(
-  sesionId: string,
-  alEvento: (e: EventoAsesor) => void,
-  alReconectar: () => void,
-): () => void {
+export function escucharEventos(ruta: string, alEvento: (e: EventoSSE) => void, alReconectar: () => void): () => void {
   const control = new AbortController();
   void (async () => {
     let espera = 1000;
     let primeraVez = true;
     while (!control.signal.aborted) {
       try {
-        const r = await peticion(`/api/v1/chat/sesiones/${sesionId}/eventos`, {
+        const r = await peticion(ruta, {
           signal: control.signal,
           headers: { Accept: "text/event-stream" },
         });
         if (!primeraVez) alReconectar();
         primeraVez = false;
         espera = 1000;
-        if (r.body) await leerStream(r.body, (e) => alEvento(e as EventoAsesor));
+        if (r.body) await leerStream(r.body, alEvento);
       } catch {
         if (control.signal.aborted) return;
         primeraVez = false;
@@ -90,6 +86,9 @@ export function escucharAsesor(
   })();
   return () => control.abort();
 }
+
+export const escucharAsesor = (sesionId: string, alEvento: (e: EventoAsesor) => void, alReconectar: () => void) =>
+  escucharEventos(`/api/v1/chat/sesiones/${sesionId}/eventos`, (e) => alEvento(e as EventoAsesor), alReconectar);
 
 export const calificar = (sesionId: string, puntaje: number, comentario?: string) =>
   json<void>(`/api/v1/chat/sesiones/${sesionId}/calificacion`, { puntaje, comentario });

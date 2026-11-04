@@ -60,3 +60,12 @@ describe("chatReducer", () => {
     expect(e.entradas).toEqual([{ rol: "usuario", texto: "Quiero rastrear" }]);
   });
 });
+
+describe("mensajes durante un escalamiento", () => {
+  it("marca como acuse la confirmación de que el mensaje llegó al asesor", () => {
+    const e = chatReducer(estadoInicial, { tipo: "evento", evento: { evento: "meta", data: { turno_id: "t", sesion_id: "s", intencion: "asesor_humano" } } });
+    expect(e.entradas[0]).toMatchObject({ rol: "agente", acuse: true });
+    const normal = chatReducer(estadoInicial, { tipo: "evento", evento: { evento: "meta", data: { turno_id: "t", sesion_id: "s", intencion: "rastrear" } } });
+    expect(normal.entradas[0]).toMatchObject({ acuse: false });
+  });
+});

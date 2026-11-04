@@ -90,6 +90,11 @@ Frontend (otro grupo) ──HTTP + SSE──►  API FastAPI 127.0.0.1:8100  (/a
 - RF-COT-6. Devuelve el desglose (peso facturable, tarifa aplicada, flete base, seguro, recargos y total) y el tiempo estimado con las observaciones de la ruta (artifact `resultado_cotizacion`). Se persiste en `cotizaciones` con la versión de reglas.
 - Aceptación: el set T-COT da el total esperado al peso.
 
+### RF-ENV: tarea «quiero enviar X» (modo agente)
+- RF-ENV-1. Con «quiero/necesito/deseo enviar X» responde con el artifact `plan_envio` (estado, embalaje, documentos y pasos del manual) y el `formulario_cotizacion` con producto y ciudades precargados, sin depender del LLM.
+- RF-ENV-2. Un producto prohibido no recibe formulario (T-MP-3). Uno que el catálogo no clasifica se informa como `sin_registro`: no se aprueba ni se inventa un veredicto.
+- RF-ENV-3. El flujo termina en una cotización: la API aún no crea guías ni órdenes de despacho.
+
 ### RF-TRK: rastreo inteligente de guías
 - RF-TRK-1. Detecta guías con `TLX-\d{6}-CO`, sin importar mayúsculas y tolerando espacios. Si hay varias, pregunta cuál; si no hay, emite `formulario_guia`.
 - RF-TRK-2. Consulta `GET /api/v1/tracking/{guia}`. Si no existe, lo dice sin inventar un estado (404).
@@ -155,7 +160,7 @@ Frontend (otro grupo) ──HTTP + SSE──►  API FastAPI 127.0.0.1:8100  (/a
 ### RF-ASE: asesor humano
 - RF-ASE-1. `GET /api/v1/asesor/escalamientos?estado=` lista la cola ordenada por prioridad y antigüedad.
 - RF-ASE-2. `POST /asesor/escalamientos/{id}/tomar` asigna el caso sin carreras (`SELECT … FOR UPDATE SKIP LOCKED`); un segundo intento responde 409.
-- RF-ASE-3. `POST /asesor/sesiones/{id}/mensajes` publica en la sesión del cliente, que lo recibe por `GET /chat/sesiones/{id}/eventos` (SSE).
+- RF-ASE-3. Chat punto a punto: `POST /asesor/sesiones/{id}/mensajes` publica en la sesión del cliente, que lo recibe por `GET /chat/sesiones/{id}/eventos` (SSE). Lo que escribe el cliente mientras está escalada llega al asesor por `GET /asesor/sesiones/{id}/eventos` (SSE) y la IA no responde.
 - RF-ASE-4. `POST /asesor/escalamientos/{id}/resolver` cierra el caso. Todo queda en `auditoria`.
 
 ### RF-ADM: administración
@@ -168,7 +173,7 @@ Frontend (otro grupo) ──HTTP + SSE──►  API FastAPI 127.0.0.1:8100  (/a
 - RF-ML-1. **Simulador etiquetado** (`origen_dato='simulado'`, semilla fija): ~12 meses de envíos sobre los 25 trayectos y 31 municipios reales; `POST /admin/simulador/avanzar?dias=N` genera envíos nuevos y cierra pendientes. Toda salida se rotula como datos simulados.
 - RF-ML-2. Modelo `riesgo_retraso` (probabilidad de superar el SLA): `HistGradientBoostingClassifier` frente a regresión logística de base, partición temporal, ROC-AUC y Brier, factores por perturbación.
 - RF-ML-3. Modelo `demanda` (despachos diarios por hub a 14 días): `HistGradientBoostingRegressor` frente a naive estacional, backtest walk-forward, MAE y MASE, intervalos por cuantiles.
-- RF-ML-4. Autoentrenamiento: dispara por nuevas etiquetas, deriva o antigüedad (> 24 h); entrena el retador fuera del bucle de eventos y solo lo promueve si mejora la métrica en el mismo holdout (champion/challenger). Cada corrida queda en `ml_entrenamientos` con su motivo.
+- RF-ML-4. Autoentrenamiento (arranca con la API; reglas y medición en `GET /admin/ml/estado`, configurables con `ML_CHECK_MIN`, `ML_MIN_NUEVOS` y `ML_MAX_HORAS`): dispara por nuevas etiquetas, deriva o antigüedad (> 24 h); entrena el retador fuera del bucle de eventos y solo lo promueve si mejora la métrica en el mismo holdout (champion/challenger). Cada corrida queda en `ml_entrenamientos` con su motivo.
 
 ### RF-VOZ: canal de voz (fuera del alcance actual)
 - Punto de integración futuro: el gateway de voz del clúster entregará el texto transcrito al mismo orquestador, sin lógica de negocio duplicada.

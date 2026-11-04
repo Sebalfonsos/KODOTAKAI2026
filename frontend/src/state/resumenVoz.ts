@@ -49,6 +49,8 @@ function deArtifact(a: Artifact): string | null {
       const producto = a.producto.replace(/\s*\([^)]*\)/g, "").trim();
       return `${producto.charAt(0).toUpperCase()}${producto.slice(1)}: ${VEREDICTO[a.veredicto]}.${docs}`;
     }
+    case "plan_envio":
+      return `${a.producto ? `Para enviar ${a.producto}` : "Para tu envío"} te dejo los pasos y el formulario en pantalla.`;
     case "ficha_cobertura":
       return `En ${a.municipio} tenemos ${a.tipo_cobertura.toLowerCase()}, con entrega en unas ${horas(a.tiempo_estandar_horas)}.`;
     case "guia_embalaje":

@@ -5,10 +5,11 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.eventos import publicar
+from app.ai.eventos import publicar, stream_sse
 from app.core.errors import ApiError, respuestas
 from app.core.security import Actor, AsesorOAdmin
 from app.db import get_session
@@ -168,6 +169,30 @@ async def tomar(escalamiento_id: uuid.UUID, actor: AsesorOAdmin, s: AsyncSession
 async def ver_sesion(sesion_id: uuid.UUID, actor: AsesorOAdmin, s: AsyncSession = Depends(get_session)):
     """Mensajes completos (con artifacts), payload de transferencia y datos de la cuenta (VIP)."""
     return await detalle_sesion(s, sesion_id)
+
+
+@router.get(
+    "/sesiones/{sesion_id}/eventos",
+    summary="Eventos en vivo de la sesión (SSE)",
+    responses={
+        200: {
+            "description": "Eventos `mensaje_cliente`, `mensaje_asesor` y `escalamiento_resuelto`",
+            "content": {"text/event-stream": {}},
+        },
+        **respuestas(401, 403, 404, 422),
+    },
+)
+async def eventos_sesion(sesion_id: uuid.UUID, actor: AsesorOAdmin, s: AsyncSession = Depends(get_session)):
+    """El chat punto a punto del lado del asesor. Envía `: ping` cada 15 s. Lo publicado durante un corte no se
+    reenvía: al reconectar, consulta `GET /asesor/sesiones/{id}`."""
+    if await s.get(SesionChat, sesion_id) is None:
+        raise ApiError(404, "No existe la sesión indicada.", "SESION_NO_ENCONTRADA")
+    await s.close()
+    return StreamingResponse(
+        stream_sse(sesion_id),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post(

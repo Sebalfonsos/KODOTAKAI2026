@@ -5,6 +5,13 @@ import { DetectorVoz, frases } from "../src/services/voz";
 
 const turno = (texto: string, ...artifacts: object[]) => ({ texto, artifacts: artifacts as Artifact[] });
 
+describe("plan de envío", () => {
+  it("anuncia el plan sin leerlo completo", () => {
+    const plan = { id: "p", version: 1, acciones: [], tipo: "plan_envio", producto: "clavos", estado: "sin_registro", resumen: "x", pasos: [], fuentes: [] };
+    expect(resumirTurno({ artifacts: [plan as never], texto: "" })).toBe("Para enviar clavos te dejo los pasos y el formulario en pantalla.");
+  });
+});
+
 describe("resumirTurno", () => {
   it("resume la cotización con el total del servidor, no el texto completo", () => {
     const r = resumirTurno(

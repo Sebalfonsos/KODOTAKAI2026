@@ -6,6 +6,7 @@ Presupuesto de latencia: reglas < 5 ms, artifact antes que cualquier texto, LLM 
 
 import asyncio
 import logging
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator
@@ -40,6 +41,8 @@ PRIORIDAD_BD = {"CRIT-005": 1, "CRIT-002": 2, "CRIT-003": 3, "CRIT-004": 4, "CRI
 UMBRAL = reglas_escalamiento()["parametros_generales"]["confidence_score_minimo"]
 INACTIVIDAD = timedelta(minutes=reglas_escalamiento()["parametros_generales"]["tiempo_maximo_inactividad_minutos"])
 MAX_FORMULARIOS = 10
+# Solo con medidas, peso o valor se llama al LLM: "5 litros de ácido" no es un peso que deba adivinar.
+_TRAE_MEDIDAS = re.compile(r"\d\s*(?:cm|centimetros|m|metros|kg|kilos?|millones?|mil|pesos|\$)|\$\s*\d", re.IGNORECASE)
 _tareas: set[asyncio.Task] = set()  # referencias a tareas en segundo plano (resúmenes IA)
 
 
@@ -199,6 +202,14 @@ async def _herramienta(s, e: Entrada, sesion: SesionChat, ruta: Ruta) -> H.Resul
             if any(c.isdigit() for c in texto) or len(texto.split()) > 4:
                 valores = await extraer_cotizacion(get_llm(), texto)
             return await H.cotizar(s, e.actor, sesion, valores)
+        case "enviar":
+            extraidos = {}
+            if _TRAE_MEDIDAS.search(texto):
+                try:
+                    extraidos = await extraer_cotizacion(get_llm(), texto)
+                except ApiError:  # RF-ESC-7: sin LLM el formulario pide esos datos; la tarea no se cae.
+                    log.warning("extraccion_envio_sin_llm")
+            return await H.enviar(s, e.actor, sesion, texto, extraidos)
         case "mercancia":
             return H.mercancia(texto, ruta.entidades.get("producto"))
         case "embalaje":
@@ -210,7 +221,7 @@ async def _herramienta(s, e: Entrada, sesion: SesionChat, ruta: Ruta) -> H.Resul
         case "pqrs_info":
             return H.rag_abierta(texto, ["pqrs", "legal"])
         case "asesor":
-            return H.Resultado(forzar_criterio="CRIT-002", confianza=1.0)
+            return H.Resultado(forzar_criterio="CRIT-002", confianza=1.0, guia=ruta.guia)
         case "fuera_de_alcance":
             return H.fuera_de_alcance()
         case _:
@@ -242,10 +253,10 @@ async def ejecutar(e: Entrada) -> AsyncIterator[BaseModel]:
 
         # Sesión ya en manos de un asesor: el mensaje va al humano, la IA no responde.
         if sesion.estado == EstadoSesion.ESCALADA:
+            await s.commit()  # Antes de avisar: el asesor recarga el historial al recibir el evento.
             publicar(
                 sesion.id, ("mensaje_cliente", {"texto": texto_usuario, "creado_en": datetime.now(UTC).isoformat()})
             )
-            await s.commit()
             yield C.EventoMeta(turno_id=str(turno), sesion_id=str(sesion.id), intencion="asesor_humano")
             yield C.EventoDelta(texto="Tu mensaje fue enviado al asesor que atiende tu caso.")
             yield C.EventoFin(turno_id=str(turno), confianza=1.0, latencias_ms=C.Latencias(total=_ms(inicio)))

@@ -449,6 +449,48 @@ class VeredictoMercancia(ArtifactBase):
     fuentes: list[Cita] = []
 
 
+class PasoPlan(BaseModel):
+    titulo: str = Field(max_length=120)
+    detalle: str = Field(max_length=500)
+    items: list[str] = []
+
+
+class PlanEnvio(ArtifactBase):
+    """Lo que hay que saber y hacer para despachar un producto; va seguido del formulario de cotización."""
+
+    model_config = _cfg(
+        {
+            "id": "art-plan-01",
+            "tipo": "plan_envio",
+            "titulo": "Plan para enviar clavos",
+            "producto": "clavos",
+            "estado": "sin_registro",
+            "resumen": "No aparece en nuestro catálogo de prohibidos y mercancías peligrosas. No es una aprobación.",
+            "pasos": [
+                {
+                    "titulo": "Embala",
+                    "detalle": "El remitente responde por un embalaje que resista vibración, frenado y apilamiento.",
+                    "items": [],
+                }
+            ],
+            "fuentes": [
+                {
+                    "doc_codigo": "DOC-OPS-2026-03",
+                    "documento": "Manual de mercancías peligrosas y embalaje",
+                    "seccion": "§4 Estándares de embalaje",
+                }
+            ],
+        }
+    )
+    tipo: Literal["plan_envio"] = "plan_envio"
+    producto: str | None = Field(default=None, max_length=200)
+    # sin_registro: el catálogo no lo clasifica (no equivale a permitido). sin_producto: aún no se sabe qué se envía.
+    estado: Literal["permitido", "restringido", "solo_ftl", "sin_registro", "sin_producto"]
+    resumen: str = Field(max_length=500)
+    pasos: list[PasoPlan] = Field(min_length=1)
+    fuentes: list[Cita] = []
+
+
 class GuiaEmbalaje(ArtifactBase):
     model_config = _cfg(
         {
@@ -1084,6 +1126,7 @@ MODELOS_ARTIFACT: tuple[type[ArtifactBase], ...] = (
     LineaTiempoEnvio,
     MapaUbicacion,
     VeredictoMercancia,
+    PlanEnvio,
     GuiaEmbalaje,
     FichaCobertura,
     FormularioPqrs,
@@ -1110,6 +1153,7 @@ Artifact = Annotated[
     | LineaTiempoEnvio
     | MapaUbicacion
     | VeredictoMercancia
+    | PlanEnvio
     | GuiaEmbalaje
     | FichaCobertura
     | FormularioPqrs

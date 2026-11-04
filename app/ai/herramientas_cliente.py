@@ -20,8 +20,9 @@ from app.config import get_settings
 from app.core.errors import ApiError
 from app.core.security import Actor
 from app.domain import ErrorDominio
-from app.domain.mercancias import evaluar_producto
-from app.domain.sanitizar import normalizar_para_busqueda
+from app.domain.cotizador import LIMITE_PAQUETERIA_KG
+from app.domain.mercancias import EvaluacionProducto, evaluar_producto
+from app.domain.sanitizar import extraer_envio, normalizar_para_busqueda
 from app.models import Envio, Municipio, SesionChat, Trayecto
 from app.models.base import Rol, TipoPqrs
 from app.schemas import artifacts as A
@@ -320,6 +321,7 @@ async def formulario_cotizacion(s: AsyncSession, sesion: SesionChat, previos: di
                 tipo="texto",
                 requerido=False,
                 max=Decimal(200),
+                valor=previos.get("contenido"),
                 ayuda="Lo validamos contra la lista de mercancías prohibidas.",
             ),
         ],
@@ -571,6 +573,121 @@ def mercancia(texto: str, producto: str | None = None) -> Resultado:
         plantilla_segura=plantilla,
         confianza=0.95,
     )
+
+
+MANUAL = "Manual de mercancías peligrosas y embalaje"
+_ETIQUETA_PLAN = {
+    "permitido": "Se puede enviar",
+    "restringido": "Se puede enviar con restricciones",
+    "solo_ftl": "Solo se acepta en carga completa (FTL)",
+}
+
+
+def _plan_envio(producto: str | None, v: EvaluacionProducto) -> A.PlanEnvio:
+    conocido = v.veredicto != "desconocido"
+    nombre = producto or "tu mercancía"
+    if conocido:
+        estado, resumen = v.veredicto, f"{_ETIQUETA_PLAN[v.veredicto]}. {v.motivo}"
+    elif producto:
+        # El catálogo no lo clasifica: se dice tal cual, sin convertirlo en un "sí" que ningún documento respalda.
+        estado = "sin_registro"
+        resumen = (
+            f"«{producto}» no aparece en nuestro catálogo de prohibidos y mercancías peligrosas. "
+            "No es una aprobación: si tiene químicos, baterías o dudas, un asesor lo confirma."
+        )
+    else:
+        estado = "sin_producto"
+        resumen = "Cuéntame qué vas a enviar o escríbelo en «¿Qué contiene?»: lo revisamos contra los prohibidos."
+
+    guia = guias_embalaje().get(v.categoria_embalaje or "")
+    embalaje = (
+        A.PasoPlan(titulo="Embala", detalle=guia[1] or guia[0], items=guia[2])
+        if guia
+        else A.PasoPlan(
+            titulo="Embala",
+            detalle="Tú respondes por entregarlo embalado para resistir vibración, frenado, inclinación y apilamiento. "
+            "El manual no trae instrucciones específicas para este producto.",
+        )
+    )
+    documentos = (
+        A.PasoPlan(
+            titulo="Reúne los documentos",
+            detalle="Son obligatorios para este envío:",
+            items=list(v.documentos_requeridos),
+        )
+        if v.documentos_requeridos
+        else A.PasoPlan(
+            titulo="Reúne los documentos",
+            detalle="El manual solo exige documentos especiales para mercancía peligrosa."
+            if conocido or producto
+            else "Dependen de lo que envíes: la mercancía peligrosa exige documentos especiales.",
+        )
+    )
+    return A.PlanEnvio(
+        id=nuevo_id("pln"),
+        titulo=f"Plan para enviar {nombre}"[:120],
+        producto=producto,
+        estado=estado,
+        resumen=resumen[:500],
+        pasos=[
+            embalaje,
+            documentos,
+            A.PasoPlan(
+                titulo="Completa el formulario",
+                detalle="Con origen, destino, medidas, peso y valor declarado te doy el flete, el seguro y el tiempo.",
+                items=[
+                    f"Paquetería hasta {LIMITE_PAQUETERIA_KG} kg; con más peso, elige carga.",
+                    "Se cobra por el mayor entre el peso real y el volumétrico.",
+                ],
+            ),
+        ],
+        fuentes=[A.Cita(doc_codigo="DOC-OPS-2026-03", documento=MANUAL, seccion=v.fuente or "§4 y §5")],
+    )
+
+
+def _servicio_sugerido(v: EvaluacionProducto) -> str | None:
+    if v.veredicto in ("restringido", "solo_ftl"):
+        return "mercancia_peligrosa"
+    return "cadena_frio" if v.categoria_embalaje == "C" else None
+
+
+async def enviar(
+    s: AsyncSession, actor: Actor, sesion: SesionChat, texto: str, extraidos: dict | None = None
+) -> Resultado:
+    """Tarea "quiero enviar X": plan con los requisitos del manual + formulario. Sin LLM: responde aunque esté caído."""
+    v = evaluar_producto(texto)
+    if v.veredicto == "prohibido":
+        return mercancia(texto)  # T-MP-3: un prohibido no llega al formulario.
+    trayectos = (await s.scalars(select(Trayecto))).unique().all()
+    datos = extraer_envio(
+        texto, sorted({t.origen.nombre for t in trayectos}), sorted({t.destino.nombre for t in trayectos})
+    )
+    # Un envío nuevo no hereda los datos de una cotización anterior de la sesión.
+    sesion.contexto = {**sesion.contexto, "cotizacion": {}}
+    valores = {**(extraidos or {})}
+    valores.update(
+        {
+            k: val
+            for k, val in {
+                "origen": datos.origen,
+                "destino": datos.destino,
+                "contenido": datos.producto,
+                "servicio": valores.get("servicio") or _servicio_sugerido(v),
+            }.items()
+            if val
+        }
+    )
+    res = await cotizar(s, actor, sesion, valores)
+    plan = _plan_envio(datos.producto, v)
+    for a in res.artifacts:
+        if isinstance(a, A.FormularioCotizacion):
+            a.titulo = f"Datos para enviar {datos.producto or 'tu mercancía'}"[:120]
+    res.artifacts.insert(0, plan)
+    if any(isinstance(a, A.FormularioCotizacion) for a in res.artifacts) and not res.texto.startswith("No pude"):
+        res.texto = f"Te dejo los pasos y el formulario para enviar {datos.producto or 'tu mercancía'}."
+    if plan.estado == "sin_registro":
+        res.artifacts.append(respuestas_rapidas(("Confirmar con un asesor", "Quiero hablar con un asesor")))
+    return res
 
 
 async def cobertura(s: AsyncSession, texto: str, ciudad: str | None, sesion: SesionChat) -> Resultado:

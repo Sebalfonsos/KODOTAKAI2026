@@ -6,7 +6,7 @@ import pytest
 
 from app.domain.estados import traducir_estado
 from app.domain.pii import enmascarar_digitos, enmascarar_nombre, enmascarar_texto
-from app.domain.sanitizar import extraer_guias, limpiar_texto, normalizar_para_busqueda
+from app.domain.sanitizar import DatosEnvio, extraer_envio, extraer_guias, limpiar_texto, normalizar_para_busqueda
 
 
 def test_todos_los_estados_del_dataset_son_conocidos(guias):
@@ -87,3 +87,27 @@ def test_extraer_guias_tolerante(guias):
 def test_enmascarar_nombre_solo_iniciales():
     assert enmascarar_nombre("Ing. Roberto Bermúdez") == "I. R. B."
     assert enmascarar_nombre("  Camila   Restrepo ") == "C. R."
+
+
+ORIGENES = ["Bogotá D.C.", "Medellín", "Cali"]
+DESTINOS = ["Medellín", "Cali", "Bogotá D.C.", "Santa Marta"]
+
+
+@pytest.mark.parametrize(
+    ("texto", "producto", "origen", "destino"),
+    [
+        ("Quiero enviar clavos", "clavos", None, None),
+        ("quiero enviar unos clavos de bogota a medellin", "clavos", "Bogotá D.C.", "Medellín"),
+        (
+            "Necesito mandar 5 litros de ácido clorhídrico de Cali a Santa Marta.",
+            "5 litros de ácido clorhídrico",
+            "Cali",
+            "Santa Marta",
+        ),
+        ("Deseo enviar clavos de acero a Medellín desde Cali", "clavos de acero", "Cali", "Medellín"),
+        ("quiero enviar un paquete a Cali", None, None, "Cali"),
+        ("quiero enviar algo", None, None, None),
+    ],
+)
+def test_extraer_envio(texto, producto, origen, destino):
+    assert extraer_envio(texto, ORIGENES, DESTINOS) == DatosEnvio(producto, origen, destino)

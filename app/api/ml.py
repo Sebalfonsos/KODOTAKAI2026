@@ -5,13 +5,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.errors import respuestas
 from app.core.security import SoloAdmin
 from app.db import get_session
-from app.ml import servicio
+from app.ml import autoentrenamiento, servicio
 from app.schemas.ml import (
     AvanceSimulacionOut,
     EntrenamientosOut,
+    EstadoAutoentrenamientoOut,
     ModelosOut,
     PronosticoOut,
     ResultadoEntrenamiento,
@@ -48,6 +50,25 @@ async def entrenamientos(
 ):
     """Corridas con su motivo (inicial, nuevos_datos, deriva, antiguedad, manual) y la decisión champion/challenger."""
     return await servicio.listar_entrenamientos(s, pagina, tamano)
+
+
+@router.get(
+    "/admin/ml/estado",
+    response_model=EstadoAutoentrenamientoOut,
+    summary="Reglas y estado del autoentrenamiento",
+    responses=respuestas(401, 403),
+)
+async def estado(_: SoloAdmin, s: Sesion):
+    """Qué dispararía el próximo reentrenamiento: reglas configuradas y valores medidos ahora."""
+    cfg = get_settings()
+    return EstadoAutoentrenamientoOut(
+        revision_cada_min=cfg.ml_check_min,
+        min_etiquetas_nuevas=cfg.ml_min_nuevos,
+        max_horas=cfg.ml_max_horas,
+        delta_deriva=autoentrenamiento.DELTA_DERIVA,
+        min_etiquetados=servicio.MIN_ETIQUETADOS,
+        **await servicio.estado_disparo(s),
+    )
 
 
 @router.post(

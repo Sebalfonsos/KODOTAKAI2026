@@ -292,6 +292,43 @@ export function VeredictoMercancia({ artifact: a }: PropsArtifact<"veredicto_mer
   );
 }
 
+const ESTADO_PLAN = {
+  permitido: { clase: "exito", icono: "check", texto: "Se puede enviar" },
+  restringido: { clase: "advertencia", icono: "alerta", texto: "Se puede enviar con restricciones" },
+  solo_ftl: { clase: "advertencia", icono: "camion", texto: "Solo en carga completa" },
+  sin_registro: { clase: "info", icono: "lupa", texto: "Sin clasificar en el catálogo" },
+  sin_producto: { clase: "info", icono: "caja", texto: "Falta saber qué envías" },
+} as const;
+
+export function PlanEnvio({ artifact: a }: PropsArtifact<"plan_envio">) {
+  const e = ESTADO_PLAN[a.estado];
+  return (
+    <div className="veredicto">
+      <p className={`insignia insignia--${e.clase}`}>
+        <Icono nombre={e.icono} tamano={20} />
+        {e.texto}
+      </p>
+      <p>{a.resumen}</p>
+      <ol className="plan">
+        {a.pasos.map((p) => (
+          <li key={p.titulo}>
+            <strong>{p.titulo}</strong>
+            <span>{p.detalle}</span>
+            {p.items.length > 0 && (
+              <ul>
+                {p.items.map((i) => (
+                  <li key={i}>{i}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+      <Fuentes fuentes={a.fuentes} />
+    </div>
+  );
+}
+
 export function GuiaEmbalaje({ artifact: a }: PropsArtifact<"guia_embalaje">) {
   return (
     <div className="bloque">

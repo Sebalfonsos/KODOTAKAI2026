@@ -12,6 +12,7 @@ INTENCIONES_CLIENTE = (
     "saludo",
     "rastrear",
     "cotizar",
+    "enviar",
     "mercancia",
     "embalaje",
     "cobertura",
@@ -64,9 +65,21 @@ _VERBOS_ENVIO = (
 )
 
 
+# "Quiero enviar X" pide despachar algo; "¿puedo enviar X?" solo pregunta si se acepta (intención mercancia).
+_QUIERE_ENVIAR = re.compile(
+    r"\b(?:quiero|quisiera|necesito|deseo|voy a|vamos a|tengo que|me gustaria|ayudame a)\s+(?:\w+\s+)?"
+    r"(?:enviar|mandar|despachar|transportar)\b"
+    r"|^(?:enviar|mandar|despachar)\s"
+    r"|\bcomo\s+(?:enviar|mandar|envio|mando|despacho)\b"
+)
+
+
 def por_reglas(texto: str) -> Ruta | None:
     t = normalizar_para_busqueda(texto)
     guias = extraer_guias(texto)
+    # Pedir una persona gana a todo: mencionar la guía o el daño no puede dejar al cliente sin asesor.
+    if _hay(t, "asesor", "humano", "persona real", "agente humano", "operador"):
+        return Ruta("asesor", 1.0, "regla", guias[0] if guias else None)
     novedad = _hay(
         t,
         "reclam",
@@ -93,8 +106,6 @@ def por_reglas(texto: str) -> Ruta | None:
         return Ruta("rastrear", 1.0, "regla", guias[0])
     if t in _SALUDOS or (len(t.split()) <= 3 and t.split() and t.split()[0] in {"hola", "buenas", "buenos"}):
         return Ruta("saludo", 1.0, "regla")
-    if _hay(t, "asesor", "humano", "persona real", "agente humano", "operador"):
-        return Ruta("asesor", 1.0, "regla")
     if _hay(
         t,
         "cotiz",
@@ -116,7 +127,10 @@ def por_reglas(texto: str) -> Ruta | None:
         return Ruta("general", 1.0, "regla")
     if _hay(t, "embal", "empac", "empaque", "como envuelvo", "como protejo"):
         return Ruta("embalaje", 1.0, "regla")
-    if any(v in t for v in _VERBOS_ENVIO) and evaluar_producto(texto).veredicto != "desconocido":
+    veredicto = evaluar_producto(texto).veredicto
+    if _QUIERE_ENVIAR.search(t) and veredicto != "prohibido":
+        return Ruta("enviar", 1.0, "regla")
+    if any(v in t for v in _VERBOS_ENVIO) and veredicto != "desconocido":
         return Ruta("mercancia", 1.0, "regla")
     if _hay(
         t,
@@ -147,6 +161,7 @@ ESQUEMA = {
 
 _GUIA_INTENCIONES = (
     "saludo: saluda. rastrear: estado de un envío o guía. cotizar: precio de un envío. "
+    "enviar: quiere despachar un producto y necesita los pasos y el formulario. "
     "mercancia: si un producto se puede enviar (peligroso o prohibido). embalaje: cómo empacar. "
     "cobertura: si llegan a una ciudad o cuánto tardan. pqrs_radicar: quiere reclamar o reportar daño/pérdida/queja. "
     "pqrs_info: pregunta requisitos o plazos de reclamos. asesor: pide hablar con una persona. "

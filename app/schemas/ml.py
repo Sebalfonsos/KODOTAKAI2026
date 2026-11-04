@@ -101,6 +101,23 @@ class PronosticoOut(BaseModel):
     datos_simulados: bool = True
 
 
+class EstadoAutoentrenamientoOut(BaseModel):
+    """Reglas vigentes (variables de entorno `ML_*`) y su medición actual. Las reglas no se editan por API."""
+
+    revision_cada_min: int = Field(description="`ML_CHECK_MIN`", examples=[10])
+    min_etiquetas_nuevas: int = Field(description="`ML_MIN_NUEVOS`: reentrena al llegar a este número", examples=[200])
+    max_horas: int = Field(description="`ML_MAX_HORAS`: reentrena si el último es más antiguo", examples=[24])
+    delta_deriva: float = Field(description="Reentrena si Brier en vivo − Brier de entrenamiento lo supera")
+    min_etiquetados: int = Field(description="Por debajo de este número no se puede entrenar")
+    n_etiquetados: int
+    n_nuevos: int
+    error_vivo: float | None = Field(description="Brier en vivo; requiere al menos 50 predicciones con desenlace")
+    n_vivo: int
+    error_entrenamiento: float | None
+    horas_desde_ultimo: float | None
+    datos_simulados: bool = True
+
+
 class AvanceSimulacionOut(BaseModel):
     dias: int
     desde: date

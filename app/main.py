@@ -13,6 +13,7 @@ from app.api import health
 from app.config import get_settings
 from app.core import errors
 from app.core.logging import MiddlewarePeticion, configurar_logs
+from app.ml import autoentrenamiento
 
 DESCRIPCION = """
 Backend del **agente de atención con IA local** de TransLogix Colombia S.A.S. (reto KODO TAKAI 2026).
@@ -52,7 +53,9 @@ TAGS = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configurar_logs()
+    autoentrenamiento.iniciar()  # RF-ML-4
     yield
+    await autoentrenamiento.detener()
     await get_llm().cerrar()
     await get_embeddings().cerrar()
 

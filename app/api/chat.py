@@ -1,7 +1,5 @@
 """Chat con el agente: sesiones, mensajes (SSE o JSON), eventos del asesor en vivo y calificación."""
 
-import asyncio
-import json
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
@@ -13,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.eventos import suscribir
+from app.ai.eventos import stream_sse
 from app.ai.orquestador import Entrada, agregar, ejecutar, ejecutar_admin, formulario_guardado
 from app.config import get_settings
 from app.core.errors import ApiError, respuestas
@@ -186,20 +184,9 @@ async def eventos(sesion_id: uuid.UUID, actor: ActorOpcional, s: AsyncSession = 
     sesion = await sesion_propia(s, sesion_id, actor)
     await s.close()
 
-    async def cuerpo():
-        with suscribir(sesion.id) as cola:
-            yield ": conectado\n\n"
-            while True:
-                try:
-                    nombre, datos = await asyncio.wait_for(cola.get(), timeout=15)
-                except TimeoutError:
-                    yield ": ping\n\n"
-                    continue
-                if nombre == "mensaje_cliente":
-                    continue  # eco del propio cliente: solo le interesa al asesor
-                yield f"event: {nombre}\ndata: {json.dumps(datos, ensure_ascii=False, default=str)}\n\n"
-
-    return StreamingResponse(cuerpo(), media_type=SSE, headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    # `mensaje_cliente` es el eco del propio cliente: solo le interesa al asesor.
+    cuerpo = stream_sse(sesion.id, ocultar=frozenset({"mensaje_cliente"}))
+    return StreamingResponse(cuerpo, media_type=SSE, headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @router.post(
