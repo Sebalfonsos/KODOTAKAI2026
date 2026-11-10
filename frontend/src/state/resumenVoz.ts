@@ -89,11 +89,6 @@ export function recortar(texto: string, max = MAX): string {
 }
 
 export function resumirTurno(turno: Pick<TurnoAgente, "artifacts" | "texto">): string {
-  // "TLX-XXXXXX-CO" leído en voz alta es ruido y la guía se puede dictar con sus 6 dígitos. Si el texto trae una
-  // guía concreta, es la que no se encontró.
-  if (turno.artifacts.some((a) => a.tipo === "formulario_guia")) {
-    return /TLX-\d{6}-CO/.test(turno.texto) ? "No encontré esa guía. Dime los seis números otra vez." : "Dime los seis números de tu guía.";
-  }
   // Los artifacts ya son frases cortas armadas aquí: no se recortan, para no perder una alerta crítica.
   for (const a of turno.artifacts) {
     const r = deArtifact(a);

@@ -28,7 +28,6 @@ from app.core.errors import ApiError
 from app.core.security import Actor
 from app.db import SessionLocal
 from app.domain.escalamiento import ContextoTurno, detectar_palabras_clave, evaluar_escalamiento
-from app.domain.sanitizar import extraer_guias, guia_dictada
 from app.models import Cuenta, Escalamiento, Mensaje, SesionChat
 from app.models.base import EstadoEscalamiento, EstadoSesion, RolMensaje
 from app.schemas import artifacts as A
@@ -187,6 +186,8 @@ async def _herramienta(s, e: Entrada, sesion: SesionChat, ruta: Ruta) -> H.Resul
     if e.formulario == "formulario_cotizacion":
         return await H.cotizar(s, e.actor, sesion, e.valores or {})
     if e.formulario == "formulario_guia":
+        from app.domain.sanitizar import extraer_guias
+
         guias = extraer_guias(str((e.valores or {}).get("guia", "")))
         return await H.rastrear(s, e.actor, sesion, guias[0] if guias else None)
     if e.formulario == "formulario_pqrs":
@@ -269,18 +270,14 @@ async def ejecutar(e: Entrada) -> AsyncIterator[BaseModel]:
         crit2 = next(c for c in reglas["criterios_escalacion"] if c["id_criterio"] == "CRIT-002")
         palabras = detectar_palabras_clave(e.texto or "", crit2["keywords_disparadoras"])
 
-        # Lo que el turno anterior quedó esperando vale solo para este mensaje: si no lo responde, se olvida.
-        esperando = sesion.contexto.pop("esperando", None)
         t0 = time.perf_counter()
         try:
             if e.formulario:
                 ruta = Ruta(e.formulario.replace("formulario_", ""), 1.0, "formulario")
             elif palabras:
                 ruta = Ruta("asesor", 1.0, "regla")
-            elif esperando == "ciudad" and len((e.texto or "").split()) <= 4:
+            elif sesion.contexto.get("esperando") == "ciudad" and len((e.texto or "").split()) <= 4:
                 ruta = Ruta("cobertura", 0.95, "contexto", entidades={"ciudad": e.texto})
-            elif esperando == "guia" and (guia := guia_dictada(e.texto or "")):
-                ruta = Ruta("rastrear", 0.95, "contexto", guia)
             else:
                 ruta = await enrutar(get_llm(), e.texto or "")
             lat["router"] = _ms(t0)

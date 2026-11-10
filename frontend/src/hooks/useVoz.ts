@@ -7,7 +7,7 @@ const MIN_MS = 600;
 const MAX_MS = 30_000;
 const LIBERAR_MS = 20_000;
 
-type Motivo = "manual" | "fin_voz" | "sin_voz" | "tope" | "cancelado";
+type Motivo = "manual" | "fin_voz" | "sin_voz" | "tope";
 
 function leerPreferencia(): boolean {
   try {
@@ -107,19 +107,12 @@ export function useVoz(voz: Voz = "female") {
     g.stop();
   }, []);
 
-  /** Corta sin transcribir ni avisar: colgar descarta lo grabado, también si el micrófono aún se estaba abriendo. */
-  const cancelar = useCallback(() => {
-    motivoFin.current = "cancelado";
-    if (grabadora.current?.state === "recording") grabadora.current.stop();
-  }, []);
-
   /** Graba hasta que el usuario deja de hablar (o toca de nuevo), transcribe y entrega el texto. */
   const iniciar = useCallback(
     async (alTexto: (texto: string) => void) => {
       if (grabadora.current || preparando.current) return;
       callar(); // si RUTI está hablando y el usuario habla, se interrumpe
       setAviso(null);
-      motivoFin.current = "manual";
       preparando.current = true;
       setPreparandoEstado(true);
       let audio: MediaStream;
@@ -132,15 +125,11 @@ export function useVoz(voz: Voz = "female") {
         preparando.current = false;
         setPreparandoEstado(false);
       }
-      // `cancelar` pudo llegar mientras se abría el micrófono (TS no ve el cambio a través del await).
-      if ((motivoFin.current as Motivo) === "cancelado") {
-        relojLiberar.current = window.setTimeout(liberarFlujo, LIBERAR_MS);
-        return;
-      }
 
       const trozos: Blob[] = [];
       const g = new MediaRecorder(audio);
       const detector = new DetectorVoz();
+      motivoFin.current = "manual";
 
       // Nivel de entrada: alimenta el detector y el anillo del botón.
       const ctx = new AudioContext();
@@ -164,6 +153,7 @@ export function useVoz(voz: Voz = "female") {
 
       g.onstart = () => {
         inicio = performance.now();
+        setGrabando(true);
       };
       g.ondataavailable = (e) => e.data.size && trozos.push(e.data);
       g.onstop = async () => {
@@ -176,7 +166,6 @@ export function useVoz(voz: Voz = "female") {
         relojLiberar.current = window.setTimeout(liberarFlujo, LIBERAR_MS);
 
         const motivo = motivoFin.current;
-        if (motivo === "cancelado") return;
         // Sin voz detectada no se transcribe: con silencio o ruido el STT inventa frases.
         // Si el usuario lo detuvo y grabó algo razonable, se respeta su intención aunque el detector dudara.
         const corto = performance.now() - inicio < MIN_MS;
@@ -198,8 +187,6 @@ export function useVoz(voz: Voz = "female") {
         }
       };
       grabadora.current = g;
-      // En el mismo lote que `preparando=false`: esperar a `onstart` dejaba un render "libre" y el modo agente colgaba.
-      setGrabando(true);
       g.start();
     },
     [callar, obtenerFlujo, detener, liberarFlujo],
@@ -208,10 +195,10 @@ export function useVoz(voz: Voz = "female") {
   useEffect(
     () => () => {
       lectura.current?.abort();
-      cancelar();
+      detener();
       liberarFlujo();
     },
-    [cancelar, liberarFlujo],
+    [detener, liberarFlujo],
   );
 
   const microfonoDisponible = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && "MediaRecorder" in window;
@@ -227,7 +214,6 @@ export function useVoz(voz: Voz = "female") {
     transcribiendo,
     iniciar,
     detener,
-    cancelar,
     /** Elemento que recibe `--nivel` (0–1) mientras se graba. */
     nivel,
     microfonoDisponible,

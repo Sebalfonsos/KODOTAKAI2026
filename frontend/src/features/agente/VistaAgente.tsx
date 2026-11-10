@@ -53,43 +53,35 @@ function Turno({ turno, contexto, ultimo }: { turno: TurnoAgente; contexto: Cont
  */
 export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversacion; vista: VistaRuti }) {
   const { estado, listo, enviar, voz, empezarDictado } = c;
-  const { cancelar, callar } = voz;
+  const { detener, callar } = voz;
   const [activo, setActivo] = useState(false);
   const turnoFinal = useRef<HTMLDivElement>(null);
 
   const ultimo = estado.entradas.at(-1);
   const conAsesor = !!estado.escalamiento && estado.escalamiento.fase !== "resuelto";
-  // La guía se puede dictar (el servidor la reconoce por sus 6 dígitos): ese formulario no pausa la llamada.
-  const pideDatos =
-    ultimo?.rol === "agente" &&
-    ultimo.completo &&
-    ultimo.artifacts.some((a) => a.tipo.startsWith("formulario_") && a.tipo !== "formulario_guia");
+  const pideDatos = ultimo?.rol === "agente" && ultimo.completo && ultimo.artifacts.some((a) => a.tipo.startsWith("formulario_"));
   const libre = listo && !estado.enCurso && !voz.grabando && !voz.preparando && !voz.transcribiendo && !voz.hablando;
   // Se pausa sola cuando hablar no sirve: un formulario por llenar, un asesor humano, un fallo o un aviso del micrófono.
   const pausar = !!voz.aviso || !!estado.fallo || conAsesor || (pideDatos && libre);
 
-  // Pausa al aparecer la condición, no mientras dura: si el usuario vuelve a tocar, la llamada sigue
-  // (p. ej. dicta el número de guía en lugar de escribirlo en el formulario).
-  const pausaPrevia = useRef(pausar);
   useEffect(() => {
-    if (pausar && !pausaPrevia.current) setActivo(false);
-    pausaPrevia.current = pausar;
-  }, [pausar]);
+    if (activo && pausar) setActivo(false);
+  }, [activo, pausar]);
 
   useEffect(() => {
-    if (!activo || !libre) return;
+    if (!activo || pausar || !libre) return;
     const t = window.setTimeout(empezarDictado, ESPERA_ESCUCHA_MS);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `empezarDictado` es nuevo en cada render.
-  }, [activo, libre]);
+  }, [activo, pausar, libre]);
 
   // Salir del modo agente corta el micrófono y la lectura.
   useEffect(
     () => () => {
-      cancelar();
+      detener();
       callar();
     },
-    [cancelar, callar],
+    [detener, callar],
   );
 
   const tarjetas = ultimo?.rol === "agente" ? ultimo.artifacts.length : 0;
@@ -97,12 +89,11 @@ export function VistaAgente({ conversacion: c, vista }: { conversacion: Conversa
     turnoFinal.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [estado.entradas.length, tarjetas]);
 
-  // Colgar descarta lo que se estaba grabando; retomar interrumpe a RUTI y escucha de inmediato.
   const alternar = () => {
-    callar();
     if (activo) {
       setActivo(false);
-      cancelar();
+      detener();
+      callar();
       return;
     }
     voz.cerrarAviso();

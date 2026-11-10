@@ -42,7 +42,7 @@ describe("resumirTurno", () => {
     expect(resumirTurno(turno("Con gusto te cotizo. Completa los datos del envío.", { tipo: "formulario_cotizacion" }))).toBe(
       "Con gusto te cotizo. Completa los datos del envío.",
     );
-    expect(resumirTurno(turno("", { tipo: "formulario_pqrs" }))).toBe("Completa los datos en pantalla para continuar.");
+    expect(resumirTurno(turno("", { tipo: "formulario_guia" }))).toBe("Completa los datos en pantalla para continuar.");
   });
 
   it("sin artifacts, lee como máximo dos frases cortas y sin Markdown", () => {

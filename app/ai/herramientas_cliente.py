@@ -160,12 +160,7 @@ def formulario_guia(sesion: SesionChat) -> Resultado:
         ],
         acciones=[accion_enviar(sesion, aid, "Rastrear")],
     )
-    return Resultado(
-        artifacts=[form],
-        texto="Claro. Escribe tu número de guía (formato TLX-XXXXXX-CO).",
-        confianza=1.0,
-        contexto={"esperando": "guia"},  # el siguiente mensaje puede ser la guía dictada (`guia_dictada`)
-    )
+    return Resultado(artifacts=[form], texto="Claro. Escribe tu número de guía (formato TLX-XXXXXX-CO).", confianza=1.0)
 
 
 async def rastrear(s: AsyncSession, actor: Actor, sesion: SesionChat, guia: str | None) -> Resultado:

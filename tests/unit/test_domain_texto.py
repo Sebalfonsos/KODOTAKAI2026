@@ -102,7 +102,6 @@ def test_extraer_guias_tolerante(guias):
         "Mi número de guía es EX 984 021. Sí, o.",
         "KLX 9840210.",
         "TLX984021CO",
-        "Nueve, ocho, cuatro, cero, dos, uno.",
     ],
 )
 def test_guia_dictada(transcrito):

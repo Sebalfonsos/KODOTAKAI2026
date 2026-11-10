@@ -7,8 +7,6 @@ API:
   espacios colapsados. Para comparar palabras clave y productos ("Ácido-Clorhídrico" -> "acido clorhidrico").
 - `extraer_guias(texto) -> list[str]`: guías `TLX-\\d{6}-CO` en forma canónica, sin duplicados y en
   orden de aparición. Tolera minúsculas, espacios y guiones omitidos ("tlx 984021 co").
-- `guia_dictada(texto) -> str | None`: guía dicha por voz cuando el chat la pide. Basta con los 6 dígitos
-  ("EX 984 021. Sí, o.", "9, 8, 4, 0, 2, 1"): solo se usa en ese contexto, fuera de él podrían ser un precio.
 - `extraer_envio(texto, origenes, destinos) -> DatosEnvio`: producto y ciudades de "quiero enviar X de A a B".
 """
 
@@ -35,24 +33,6 @@ def normalizar_para_busqueda(texto: str) -> str:
 def extraer_guias(texto: str) -> list[str]:
     guias = (f"TLX-{re.sub(r'\s', '', m.group(1))}-CO" for m in _GUIA.finditer(texto))
     return list(dict.fromkeys(guias))
-
-
-_DIGITOS = {p: str(i) for i, p in enumerate("cero uno dos tres cuatro cinco seis siete ocho nueve".split())}
-_DIGITO_EN_LETRAS = re.compile(rf"\b({'|'.join(_DIGITOS)})\b")
-
-
-def guia_dictada(texto: str) -> str | None:
-    # El STT acierta los dígitos y suele perder "TLX" y "CO", que son fijos.
-    if guias := extraer_guias(texto):
-        return guias[0]
-    # A veces los entrega en letras ("Nueve, ocho, cuatro…").
-    # ponytail: solo cifra por cifra; "novecientos ochenta y cuatro mil" no se convierte (el STT ya lo da en números).
-    texto = _DIGITO_EN_LETRAS.sub(lambda m: _DIGITOS[m.group(1)], normalizar_para_busqueda(texto))
-    digitos = re.sub(r"\D", "", texto)
-    # ponytail: el "ce o" final a veces llega como "0" ("KLX 9840210"); un séptimo dígito distinto no se adivina.
-    if len(digitos) == 7 and digitos.endswith("0"):
-        digitos = digitos[:6]
-    return f"TLX-{digitos}-CO" if len(digitos) == 6 else None
 
 
 @dataclass(frozen=True)
